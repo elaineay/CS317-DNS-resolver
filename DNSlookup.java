@@ -103,7 +103,7 @@ public class DNSlookup {
 
         // Get response from DNS server
         byte[] responseBytes = new byte[1234];
-        Da respPacket = new DatagramPacket(responseBytes, responseBytes.length);
+        DatagramPacket respPacket = new DatagramPacket(responseBytes, responseBytes.length);
         socket.receive(respPacket);
 
         //TODO: checking if received
@@ -113,6 +113,9 @@ public class DNSlookup {
             System.out.print(" 0x" + String.format("%x", responseBytes[i]) + " " );
         }
         System.out.println("\n");
+
+        //TODO make the respPacket into a DNSResponse
+
 
         // Format packet into byte array input stream
         DataInputStream dInput = new DataInputStream(new ByteArrayInputStream(responseBytes));
