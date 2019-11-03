@@ -1,10 +1,6 @@
-import java.net.InetAddress;
-
-
-
-// Lots of the action associated with handling a DNS query is processing 
+// Lots of the action associated with handling a DNS query is processing
 // the response. Although not required you might find the following skeleton of
-// a DNSreponse helpful. The class below has a bunch of instance data that typically needs to be 
+// a DNS response helpful. The class below has a bunch of instance data that typically needs to be
 // parsed from the response. If you decide to use this class keep in mind that it is just a 
 // suggestion.  Feel free to add or delete methods or instance variables to best suit your implementation.
 

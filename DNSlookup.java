@@ -1,6 +1,4 @@
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -53,11 +51,13 @@ public class DNSlookup {
                 return;
             }
         }
+
+        lookup(rootNameServer, fqdn, tracingOn, IPV6Query);
     }
 
 	// Start adding code here to initiate the lookup
 
-    public static void lookup(InetAddress rootNameServer, String fqdn) throws IOException {
+    public static void lookup(InetAddress rootNameServer, String fqdn, boolean tracingOn, boolean IPV6Query) throws IOException {
         ByteArrayOutputStream bAOutput = new ByteArrayOutputStream();
         DataOutputStream dOutput = new DataOutputStream(bAOutput);
 
@@ -87,20 +87,54 @@ public class DNSlookup {
 
         byte[] outputFrame = bAOutput.toByteArray();
 
+        // TODO: just checking if sending
+        System.out.println("Sending: " + outputFrame.length + " bytes");
+        for (int i =0; i< outputFrame.length; i++) {
+            System.out.print("0x" + String.format("%x", outputFrame[i]) + " " );
+        }
+
         // Send DNS Request
         DatagramSocket socket = new DatagramSocket();
-        DatagramPacket packet = new DatagramPacket(outputFrame,
+        DatagramPacket reqPacket = new DatagramPacket(outputFrame,
                                                    outputFrame.length,
                                                    rootNameServer,
                                                    port);
-        socket.send(packet);
+        socket.send(reqPacket);
+
+        // Get response from DNS server
+        byte[] responseBytes = new byte[1234];
+        Da respPacket = new DatagramPacket(responseBytes, responseBytes.length);
+        socket.receive(respPacket);
+
+        //TODO: checking if received
+        System.out.println("\n\nReceived: " + respPacket.getLength() + " bytes");
+
+        for (int i = 0; i < respPacket.getLength(); i++) {
+            System.out.print(" 0x" + String.format("%x", responseBytes[i]) + " " );
+        }
+        System.out.println("\n");
+
+        // Format packet into byte array input stream
+        DataInputStream dInput = new DataInputStream(new ByteArrayInputStream(responseBytes));
+
+
+
+        // Print with trace
+        if (tracingOn) {
+
+        } else if (!tracingOn) {
+            // Print without trace -t: name_being_looked_up TTL ADDRESS_TYPE IP_address
+            System.out.println(fqdn + " ");
+        }
+
+
 
         // TODO: stopped here, have not yet called lookup in main, need to do waiting for response from server
     }
 
     // lookup should print name, space, TTL, 3 spaces, type, space, resolved IP address
     // IPv4 address: type "A"
-    // IPV6 address: type "AAA"
+    // IPV6 address: type "AAAA"
     //    System.out.println();
 	
     
