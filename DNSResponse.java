@@ -7,8 +7,16 @@
 
 
 public class DNSResponse {
+    // DNS section
     private int queryID;                  // this is for the response it must match the one in the request 
-    private int answerCount = 0;          // number of answers  
+    private int flags;                    // type of response this is
+    private int questionCount;            // number of questions
+    private int answerCount = 0;          // number of answers
+    private int authCount;                // number of authoritative records
+
+    // Queries
+
+
     private boolean decoded = false;      // Was this response successfully decoded
     private int nsCount = 0;              // number of nscount response records
     private int additionalCount = 0;      // number of additional (alternate) response records
@@ -28,11 +36,13 @@ public class DNSResponse {
     // probably the minimum that you need.
 
 	public DNSResponse (byte[] data, int len) {
+	    // receive 12 bytes
 	    
 	    // The following are probably some of the things 
 	    // you will need to do.
 	    // Extract the query ID
-
+        queryID = data[0];
+//        flags = data[1];
 	    // Make sure the message is a query response and determine
 	    // if it is an authoritative response or not
 
