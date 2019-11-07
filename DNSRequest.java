@@ -52,8 +52,9 @@ public class DNSRequest {
         outputFrame = bAOutput.toByteArray();
 
         // TODO: just checking if sending
+        System.out.println("dnsRequest run");
         System.out.println("Sending: " + outputFrame.length + " bytes");
-        for (int i =0; i< outputFrame.length; i++) {
+        for (int i =0; i < outputFrame.length; i++) {
             System.out.print("0x" + String.format("%x", outputFrame[i]) + " " );
         }
 

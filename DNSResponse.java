@@ -1,3 +1,7 @@
+import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 // Lots of the action associated with handling a DNS query is processing
 // the response. Although not required you might find the following skeleton of
 // a DNS response helpful. The class below has a bunch of instance data that typically needs to be
@@ -35,14 +39,75 @@ public class DNSResponse {
     // The constructor: you may want to add additional parameters, but the two shown are 
     // probably the minimum that you need.
 
-	public DNSResponse (byte[] data, int len) {
+	public DNSResponse (byte[] data, int len) throws IOException {
 	    // receive 12 bytes
 	    
 	    // The following are probably some of the things 
 	    // you will need to do.
 	    // Extract the query ID
         queryID = data[0];
-//        flags = data[1];
+        System.out.println("Hey we made it QueryID:" + queryID);
+
+        System.out.println("Domain Name System (response) \n");
+
+        DataInputStream dataInput = new DataInputStream(new ByteArrayInputStream(data));
+        System.out.println("Transaction ID: 0x" + String.format("%x", dataInput.readShort()));
+
+
+        // flags = data[1];
+        flags = shortToInt(dataInput.readShort());
+        System.out.println("Flags: 0x" + flags);
+
+        // QuestionCount;
+        questionCount = shortToInt(dataInput.readShort());
+        System.out.println("Questions: 0x" + questionCount);
+
+        answerCount = shortToInt(dataInput.readShort());
+        System.out.println("Answers RRs: 0x" + answerCount);
+
+        authCount = shortToInt(dataInput.readShort());
+        System.out.println("Authority RRs: 0x" + authCount);
+
+        additionalCount = shortToInt(dataInput.readShort());
+        System.out.println("Additional RRs: 0x" + additionalCount);
+
+        int recLen = 0;
+        while ((recLen = dataInput.readByte()) > 0) {
+            byte[] record = new byte[recLen];
+
+            for (int i = 0; i < recLen; i++) {
+                record[i] = dataInput.readByte();
+            }
+
+            System.out.println("Record: " + new String(record, "UTF-8"));
+        }
+
+        System.out.println("Record Type: 0x" + String.format("%x", dataInput.readShort()));
+        System.out.println("Class: 0x" + String.format("%x", dataInput.readShort()));
+
+        System.out.println("Field: 0x" + String.format("%x", dataInput.readShort()));
+        System.out.println("Type: 0x" + String.format("%x", dataInput.readShort()));
+        System.out.println("Class: 0x" + String.format("%x", dataInput.readShort()));
+        System.out.println("TTL: 0x" + String.format("%x", dataInput.readInt()));
+
+        short addrLen = dataInput.readShort();
+        System.out.println("Len: 0x" + String.format("%x", addrLen));
+
+        recLen = 0;
+        while ((recLen = dataInput.readByte()) > 0) {
+            byte[] record = new byte[recLen];
+
+            for (int i = 0; i < recLen; i++) {
+                record[i] = dataInput.readByte();
+            }
+
+            System.out.println("Record: " + new String(record, "UTF-8"));
+        }
+
+        System.out.println("more?" + String.format("%x", dataInput.readShort()));
+
+
+
 	    // Make sure the message is a query response and determine
 	    // if it is an authoritative response or not
 
@@ -54,7 +119,14 @@ public class DNSResponse {
 
 	    // Extract list of answers, name server, and additional information response 
 	    // records
+
 	}
+
+    // Takes in a short and returns it as an integer
+    private Integer shortToInt(short s) {
+        String str = String.format("%x", s);
+        return Integer.parseInt(str);
+    }
 
 
     // You will probably want a method to extract a compressed FQDN, IP address
