@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.*;
 // Lots of the action associated with handling a DNS query is processing
 // the response. Although not required you might find the following skeleton of
 // a DNS response helpful. The class below has a bunch of instance data that typically needs to be
@@ -26,6 +27,28 @@ public class DNSResponse {
     private int additionalCount = 0;      // number of additional (alternate) response records
     private boolean authoritative = false;// Is this an authoritative record
 
+    public class DNSServer {
+        String serverName;
+        String serverType;
+        String serverClass;
+        int timeTL;
+        int dataLength;
+        String serverNameServer;
+
+        public DNSServer(String serverName, String serverType, String serverClass, int timeTL, int dataLength, String serverNameServer){
+            this.serverName = serverName;
+            this.serverType = serverType;
+            this.serverClass = serverClass;
+            this.timeTL = timeTL;
+            this.dataLength = dataLength;
+            this.serverNameServer = serverNameServer;
+        }
+    }
+
+    private ArrayList<DNSServer> answerServers;
+    private ArrayList<DNSServer> authoritativeServers;
+    private ArrayList<DNSServer> additionalRecords;
+
     // Note you will almost certainly need some additional instance variables.
 
     // When in trace mode you probably want to dump out all the relevant information in a response
@@ -45,6 +68,8 @@ public class DNSResponse {
 	    // The following are probably some of the things 
 	    // you will need to do.
 	    // Extract the query ID
+
+        // TODO: Use a random class to get a random number generator to use between 0 to 65535
         queryID = data[0];
         System.out.println("Hey we made it QueryID:" + queryID);
 
@@ -71,6 +96,9 @@ public class DNSResponse {
         additionalCount = shortToInt(dataInput.readShort());
         System.out.println("Additional RRs: " + additionalCount);
 
+        String queryName = "";
+
+        // References can contain references
         int recLen = 0;
         while ((recLen = dataInput.readByte()) > 0) {
             byte[] record = new byte[recLen];
@@ -79,8 +107,9 @@ public class DNSResponse {
                 record[i] = dataInput.readByte();
             }
 
-            System.out.println("Record: " + new String(record, "UTF-8"));
+            queryName += new String(record, "UTF-8") + ".";
         }
+        System.out.println("Query Name: " + queryName);
 
 
         System.out.println("Record Type: 0x" + String.format("%x", dataInput.readShort()));
@@ -89,18 +118,20 @@ public class DNSResponse {
         // May have to do the same for Answer servers and additional servers, reuse this logic
         System.out.println("Start authoritative name server section");
 
+
         for (int i = 0; i < authCount; i++) {
+            // authoritativeServers.add(buildServerResult(data, dataInput));
+
             Short authNameShort = dataInput.readShort();
             String authName = String.format("%x", authNameShort); 
             // Make this cleaner later, bitwise operator to get c0, use the pointer to get authName
             if ((authNameShort >> 6) == -256) {
+                System.out.println("This true");
                 int pointer = Integer.decode("0x0" + authName.substring(1));
                 int authNameLen = data[pointer];
                 authName = "";
-                for (int n = 1; n <= authNameLen; n++) {
-                    byte tmp = data[pointer + n];
-                    authName += (char)tmp;
-                }
+                recLen = 0;
+                
             }
             System.out.println("authName: " + authName);
             String authType = String.format("%x", dataInput.readShort());
@@ -109,54 +140,76 @@ public class DNSResponse {
             int authRDLen = dataInput.readShort();
             System.out.println("authRDLen : " + authRDLen);
 
-            String ipAddress = "";
+            String nameServer = "";
             recLen = 0;
             while ((recLen = dataInput.readByte()) > 0) {
                 byte[] record = new byte[recLen];
-                System.out.println("reclen is: " + recLen);
 
                 for (int j = 0; j < recLen; j++) {
                     record[j] = dataInput.readByte();
                 }
-                ipAddress += (new String(record, "UTF-8")) + ".";
+                nameServer += (new String(record, "UTF-8")) + ".";
             }
-            System.out.println("recLen finishes at: " + (recLen >> 6));
             if ((recLen >> 6) == -1) {
+                // We gotta handle the full address like above
                 int pointer = dataInput.readByte();
-                System.out.println("pointer is: " + pointer);
                 int ipNameLen = data[pointer];
                 for (int j = 1; j <= ipNameLen; j++) {
                     byte tmp = data[pointer + j];
-                    ipAddress += (char)tmp;
+                    nameServer += (char)tmp;
                 }
 
             }
-            System.out.println("ipAddress is: " + ipAddress);
+            System.out.println("nameServer is: " + nameServer);
         }
 
 
 
-        // System.out.println("Field: 0x" + String.format("%x", dataInput.readShort()));
-        // System.out.println("Type: 0x" + String.format("%x", dataInput.readShort()));
-        // System.out.println("Class: 0x" + String.format("%x", dataInput.readShort()));
-        // System.out.println("TTL: 0x" + String.format("%x", dataInput.readInt()));
+        System.out.println("Start building Additional Records");
 
-        // short addrLen = dataInput.readShort();
-        // System.out.println("Len: 0x" + String.format("%x", addrLen));
-
-        // recLen = 0;
-        // while ((recLen = dataInput.readByte()) > 0) {
-        //     byte[] record = new byte[recLen];
-
-        //     for (int i = 0; i < recLen; i++) {
-        //         record[i] = dataInput.readByte();
+        // for (int i = 0; i < additionalCount; i++) {
+        //     Short addNameShort = dataInput.readShort();
+        //     String authName = String.format("%x", addNameShort); 
+        //     System.out.println("WE GO AGAIN: " + authName);
+        //     // Make this cleaner later, bitwise operator to get c0, use the pointer to get authName
+        //     if ((addNameShort >> 6) == -256) {
+        //         int pointer = Integer.decode("0x0" + authName.substring(1));
+        //         int additionalNameLen = data[pointer];
+        //         System.out.println("Additional pointer: " + additionalNameLen);
+        //         authName = "";
+        //         for (int n = 1; n <= additionalNameLen; n++) {
+        //             byte tmp = data[pointer + n];
+        //             authName += (char)tmp;
+        //         }
         //     }
+        //     System.out.println("authName: " + authName);
+        //     String authType = String.format("%x", dataInput.readShort());
+        //     String authClass = String.format("%x", dataInput.readShort());
+        //     int authTTL = dataInput.readInt();
+        //     int authRDLen = dataInput.readShort();
+        //     System.out.println("authRDLen : " + authRDLen);
 
-        //     System.out.println("Record: " + new String(record, "UTF-8"));
+        //     String nameServer = "";
+        //     recLen = 0;
+        //     while ((recLen = dataInput.readByte()) > 0) {
+        //         byte[] record = new byte[recLen];
+
+        //         for (int j = 0; j < recLen; j++) {
+        //             record[j] = dataInput.readByte();
+        //         }
+        //         nameServer += (new String(record, "UTF-8")) + ".";
+        //     }
+        //     if ((recLen >> 6) == -1) {
+        //         int pointer = dataInput.readByte();
+        //         int ipNameLen = data[pointer];
+        //         for (int j = 1; j <= ipNameLen; j++) {
+        //             byte tmp = data[pointer + j];
+        //             nameServer += (char)tmp;
+        //         }
+
+        //     }
+        //     System.out.println("nameServer is: " + nameServer);
         // }
-
-        System.out.println("Start building authoritative name servers");
-
 
 
 	    // Make sure the message is a query response and determine
@@ -177,6 +230,50 @@ public class DNSResponse {
     private Integer shortToInt(short s) {
         String str = String.format("%x", s);
         return Integer.parseInt(str);
+    }
+
+    private DNSServer buildServerResult(byte[] data, DataInputStream dataInput) throws IOException {
+        Short authNameShort = dataInput.readShort();
+        String authName = String.format("%x", authNameShort); 
+        int recLen = 0;
+        // Make this cleaner later, bitwise operator to get c0, use the pointer to get authName
+        if ((authNameShort >> 6) == -256) {
+            System.out.println("This true");
+            int pointer = Integer.decode("0x0" + authName.substring(1));
+            int authNameLen = data[pointer];
+            authName = "";
+        }
+        System.out.println("authName: " + authName);
+        String authType = String.format("%x", dataInput.readShort());
+        String authClass = String.format("%x", dataInput.readShort());
+        int authTTL = dataInput.readInt();
+        int authRDLen = dataInput.readShort();
+        System.out.println("authRDLen : " + authRDLen);
+
+        String nameServer = "";
+        recLen = 0;
+        while ((recLen = dataInput.readByte()) > 0) {
+            byte[] record = new byte[recLen];
+
+            for (int j = 0; j < recLen; j++) {
+                record[j] = dataInput.readByte();
+            }
+            nameServer += (new String(record, "UTF-8")) + ".";
+        }
+        if ((recLen >> 6) == -1) {
+            // We gotta handle the full address like above
+            int pointer = dataInput.readByte();
+            int ipNameLen = data[pointer];
+            for (int j = 1; j <= ipNameLen; j++) {
+                byte tmp = data[pointer + j];
+                nameServer += (char)tmp;
+            }
+
+        }
+        System.out.println("nameServer is: " + nameServer);
+
+        DNSServer oServer = new DNSServer("s", "s", "s", 0, 0, "s");
+        return oServer;
     }
 
     // You will probably want a method to extract a compressed FQDN, IP address
