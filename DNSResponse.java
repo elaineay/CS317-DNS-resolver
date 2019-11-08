@@ -1,7 +1,6 @@
-import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 // Lots of the action associated with handling a DNS query is processing
 // the response. Although not required you might find the following skeleton of
 // a DNS response helpful. The class below has a bunch of instance data that typically needs to be
@@ -15,15 +14,15 @@ public class DNSResponse {
     private int queryID;                  // this is for the response it must match the one in the request 
     private int flags;                    // type of response this is
     private int questionCount;            // number of questions
-    private int answerCount = 0;          // number of answers
+    private int answerCount;              // number of answers
     private int authCount;                // number of authoritative records
 
     // Queries
 
 
     private boolean decoded = false;      // Was this response successfully decoded
-    private int nsCount = 0;              // number of nscount response records
-    private int additionalCount = 0;      // number of additional (alternate) response records
+    private int nsCount;                  // number of nscount response records
+    private int additionalCount;          // number of additional (alternate) response records
     private boolean authoritative = false;// Is this an authoritative record
 
     // Note you will almost certainly need some additional instance variables.
@@ -177,6 +176,10 @@ public class DNSResponse {
     private Integer shortToInt(short s) {
         String str = String.format("%x", s);
         return Integer.parseInt(str);
+    }
+
+    public int getAnswerCount() {
+	    return answerCount;
     }
 
     // You will probably want a method to extract a compressed FQDN, IP address

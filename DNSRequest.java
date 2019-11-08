@@ -3,6 +3,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.util.Random;
 
 public class DNSRequest {
     private int transactionID;
@@ -23,7 +24,9 @@ public class DNSRequest {
         ByteArrayOutputStream bAOutput = new ByteArrayOutputStream();
         DataOutputStream dOutput = new DataOutputStream(bAOutput);
 
-        transactionID = 0x1234;
+        Random randomGenerator = new Random();
+
+        transactionID = randomGenerator.nextInt(0xFFFF)+1;
         flag = 0x0100;
         questionCount = 0x0001;
         answerCount = 0x0000;
@@ -40,8 +43,10 @@ public class DNSRequest {
         String[] dnSections = fqdn.split("\\.");
         dOutput.writeByte(dnSections.length);
 
+        // write the domain into the DNS request
         for (String s : dnSections) {
             byte[] byteArray = s.getBytes("UTF-8");
+            dOutput.write(byteArray.length);
             dOutput.write(byteArray);
         }
 
@@ -52,7 +57,7 @@ public class DNSRequest {
         outputFrame = bAOutput.toByteArray();
 
         // TODO: just checking if sending
-        System.out.println("dnsRequest run");
+        System.out.println("Lookup being called");
         System.out.println("Sending: " + outputFrame.length + " bytes");
         for (int i =0; i < outputFrame.length; i++) {
             System.out.print("0x" + String.format("%x", outputFrame[i]) + " " );
@@ -62,8 +67,6 @@ public class DNSRequest {
     }
 
     public DatagramPacket createSendable(DNSRequest dnsRequest,InetAddress rootNameServer, int port) {
-
-
         DatagramPacket reqPacket = new DatagramPacket(dnsRequest.outputFrame,
                 dnsRequest.outputFrame.length,
                 rootNameServer,
