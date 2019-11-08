@@ -90,15 +90,13 @@ public class DNSResponse {
         System.out.println("Start authoritative name server section");
 
         for (int i = 0; i < authCount; i++) {
-            Short authNameByte = dataInput.readShort();
-            String authName = String.format("%x", authNameByte); 
+            Short authNameShort = dataInput.readShort();
+            String authName = String.format("%x", authNameShort); 
             // Make this cleaner later, bitwise operator to get c0, use the pointer to get authName
-            if ((authNameByte >> 6) == -256) {
+            if ((authNameShort >> 6) == -256) {
                 int pointer = Integer.decode("0x0" + authName.substring(1));
-                DataInputStream tempInput = new DataInputStream(new ByteArrayInputStream(data));
                 int authNameLen = data[pointer];
                 authName = "";
-                System.out.println("Compression exists byte: " + authNameLen);
                 for (int n = 1; n <= authNameLen; n++) {
                     byte tmp = data[pointer + n];
                     authName += (char)tmp;
@@ -115,18 +113,25 @@ public class DNSResponse {
             recLen = 0;
             while ((recLen = dataInput.readByte()) > 0) {
                 byte[] record = new byte[recLen];
+                System.out.println("reclen is: " + recLen);
 
                 for (int j = 0; j < recLen; j++) {
                     record[j] = dataInput.readByte();
-                    if ((record[j] | 63) == 255) {
-                        System.out.println("Compression exists");
-                    }
                 }
                 ipAddress += (new String(record, "UTF-8")) + ".";
             }
-            System.out.println(ipAddress);
-            System.out.println("This line should print a period: " + String.format("%x", dataInput.readByte()));
+            System.out.println("recLen finishes at: " + (recLen >> 6));
+            if ((recLen >> 6) == -1) {
+                int pointer = dataInput.readByte();
+                System.out.println("pointer is: " + pointer);
+                int ipNameLen = data[pointer];
+                for (int j = 1; j <= ipNameLen; j++) {
+                    byte tmp = data[pointer + j];
+                    ipAddress += (char)tmp;
+                }
 
+            }
+            System.out.println("ipAddress is: " + ipAddress);
         }
 
 
