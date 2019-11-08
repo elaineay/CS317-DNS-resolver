@@ -86,26 +86,48 @@ public class DNSResponse {
         System.out.println("Record Type: 0x" + String.format("%x", dataInput.readShort()));
         System.out.println("Class: 0x" + String.format("%x", dataInput.readShort()));
 
+        // May have to do the same for Answer servers and additional servers, reuse this logic
         System.out.println("Start authoritative name server section");
 
         for (int i = 0; i < authCount; i++) {
-            String authName = String.format("%x", dataInput.readShort());
+            Short authNameByte = dataInput.readShort();
+            String authName = String.format("%x", authNameByte); 
+            // Make this cleaner later, bitwise operator to get c0, use the pointer to get authName
+            if ((authNameByte >> 6) == -256) {
+                int pointer = Integer.decode("0x0" + authName.substring(1));
+                DataInputStream tempInput = new DataInputStream(new ByteArrayInputStream(data));
+                int authNameLen = data[pointer];
+                authName = "";
+                System.out.println("Compression exists byte: " + authNameLen);
+                for (int n = 1; n <= authNameLen; n++) {
+                    byte tmp = data[pointer + n];
+                    authName += (char)tmp;
+                }
+            }
+            System.out.println("authName: " + authName);
             String authType = String.format("%x", dataInput.readShort());
             String authClass = String.format("%x", dataInput.readShort());
             int authTTL = dataInput.readInt();
             int authRDLen = dataInput.readShort();
             System.out.println("authRDLen : " + authRDLen);
 
-            byte[] authAddress = new byte[authRDLen];
             String ipAddress = "";
-            for (int j = 0; j < authRDLen; j++) {
-                authAddress[j] = dataInput.readByte();
+            recLen = 0;
+            while ((recLen = dataInput.readByte()) > 0) {
+                byte[] record = new byte[recLen];
+
+                for (int j = 0; j < recLen; j++) {
+                    record[j] = dataInput.readByte();
+                    if ((record[j] | 63) == 255) {
+                        System.out.println("Compression exists");
+                    }
+                }
+                ipAddress += (new String(record, "UTF-8")) + ".";
             }
-            System.out.println("Record IP: " + authAddress);
-            System.out.println("Record String: " + new String(authAddress, "UTF-8"));
+            System.out.println(ipAddress);
+            System.out.println("This line should print a period: " + String.format("%x", dataInput.readByte()));
 
         }
-        // System.out.println(serverStart);
 
 
 
@@ -151,7 +173,6 @@ public class DNSResponse {
         String str = String.format("%x", s);
         return Integer.parseInt(str);
     }
-
 
     // You will probably want a method to extract a compressed FQDN, IP address
     // cname, authoritative DNS servers and other values like the query ID etc.
