@@ -51,25 +51,25 @@ public class DNSResponse {
         System.out.println("Domain Name System (response) \n");
 
         DataInputStream dataInput = new DataInputStream(new ByteArrayInputStream(data));
-        System.out.println("Transaction ID: 0x" + String.format("%x", dataInput.readShort()));
+        System.out.println("Transaction ID: " + String.format("%x", dataInput.readShort()));
 
 
         // flags = data[1];
         flags = shortToInt(dataInput.readShort());
-        System.out.println("Flags: 0x" + flags);
+        System.out.println("Flags: " + flags);
 
         // QuestionCount;
         questionCount = shortToInt(dataInput.readShort());
-        System.out.println("Questions: 0x" + questionCount);
+        System.out.println("Questions: " + questionCount);
 
         answerCount = shortToInt(dataInput.readShort());
-        System.out.println("Answers RRs: 0x" + answerCount);
+        System.out.println("Answers RRs: " + answerCount);
 
         authCount = shortToInt(dataInput.readShort());
-        System.out.println("Authority RRs: 0x" + authCount);
+        System.out.println("Authority RRs: " + authCount);
 
         additionalCount = shortToInt(dataInput.readShort());
-        System.out.println("Additional RRs: 0x" + additionalCount);
+        System.out.println("Additional RRs: " + additionalCount);
 
         int recLen = 0;
         while ((recLen = dataInput.readByte()) > 0) {
@@ -82,29 +82,53 @@ public class DNSResponse {
             System.out.println("Record: " + new String(record, "UTF-8"));
         }
 
+
         System.out.println("Record Type: 0x" + String.format("%x", dataInput.readShort()));
         System.out.println("Class: 0x" + String.format("%x", dataInput.readShort()));
 
-        System.out.println("Field: 0x" + String.format("%x", dataInput.readShort()));
-        System.out.println("Type: 0x" + String.format("%x", dataInput.readShort()));
-        System.out.println("Class: 0x" + String.format("%x", dataInput.readShort()));
-        System.out.println("TTL: 0x" + String.format("%x", dataInput.readInt()));
+        System.out.println("Start authoritative name server section");
 
-        short addrLen = dataInput.readShort();
-        System.out.println("Len: 0x" + String.format("%x", addrLen));
+        for (int i = 0; i < authCount; i++) {
+            String authName = String.format("%x", dataInput.readShort());
+            String authType = String.format("%x", dataInput.readShort());
+            String authClass = String.format("%x", dataInput.readShort());
+            int authTTL = dataInput.readInt();
+            int authRDLen = dataInput.readShort();
+            System.out.println("authRDLen : " + authRDLen);
 
-        recLen = 0;
-        while ((recLen = dataInput.readByte()) > 0) {
-            byte[] record = new byte[recLen];
-
-            for (int i = 0; i < recLen; i++) {
-                record[i] = dataInput.readByte();
+            byte[] authAddress = new byte[authRDLen];
+            String ipAddress = "";
+            for (int j = 0; j < authRDLen; j++) {
+                authAddress[j] = dataInput.readByte();
             }
+            System.out.println("Record IP: " + authAddress);
+            System.out.println("Record String: " + new String(authAddress, "UTF-8"));
 
-            System.out.println("Record: " + new String(record, "UTF-8"));
         }
+        // System.out.println(serverStart);
 
-        System.out.println("more?" + String.format("%x", dataInput.readShort()));
+
+
+        // System.out.println("Field: 0x" + String.format("%x", dataInput.readShort()));
+        // System.out.println("Type: 0x" + String.format("%x", dataInput.readShort()));
+        // System.out.println("Class: 0x" + String.format("%x", dataInput.readShort()));
+        // System.out.println("TTL: 0x" + String.format("%x", dataInput.readInt()));
+
+        // short addrLen = dataInput.readShort();
+        // System.out.println("Len: 0x" + String.format("%x", addrLen));
+
+        // recLen = 0;
+        // while ((recLen = dataInput.readByte()) > 0) {
+        //     byte[] record = new byte[recLen];
+
+        //     for (int i = 0; i < recLen; i++) {
+        //         record[i] = dataInput.readByte();
+        //     }
+
+        //     System.out.println("Record: " + new String(record, "UTF-8"));
+        // }
+
+        System.out.println("Start building authoritative name servers");
 
 
 
