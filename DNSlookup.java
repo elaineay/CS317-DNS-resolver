@@ -61,6 +61,7 @@ public class DNSlookup {
     public static void lookup() throws IOException {
         DNSResponse response = sendAndReceivePacket(rootNameServer, fqdn);
 
+        validFlagsCheck(response.getFlags(), fqdn, rootNameServer);
         if (tracingOn) {
             printResponseInfo(response);
         }
@@ -136,6 +137,7 @@ public class DNSlookup {
                     } else if (answerServers.get(0).serverName == lookForIPofCN){
                         // if we find the IP address of the CN we were looking for iterate again
                         nextResponse = sendAndReceivePacket(ansIP, fqdn);
+                        validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
                         if (tracingOn) {
                             printResponseInfo(nextResponse);
                         }
@@ -144,6 +146,7 @@ public class DNSlookup {
                 } else if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverType == "CN"){
                     // if get a CN answer search for the CN domain with root IP
                     nextResponse = sendAndReceivePacket(rootNameServer, answerServers.get(0).serverNameServer);
+                    validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
                     if (tracingOn) {
                         printResponseInfo(nextResponse);
                     }
@@ -154,6 +157,8 @@ public class DNSlookup {
                 if (currResponse.getAdditionalCount() > 0) {
                     InetAddress additionalIP = InetAddress.getByName(additionalRecords.get(0).serverNameServer);
                     nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
+                    System.out.println("NextReponse flags:" + String.format("%x", nextResponse.getFlags()));
+                    // validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
                     if (tracingOn) {
                         printResponseInfo(nextResponse);
                     }
@@ -164,6 +169,7 @@ public class DNSlookup {
                     // need to keep looking for this IP until reach A record
                     lookForIPofCN = authIP;
                     nextResponse = sendAndReceivePacket(rootNameServer, lookForIPofCN);
+                    // validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
                     if (tracingOn) {
                         printResponseInfo(nextResponse);
                     }
@@ -223,6 +229,19 @@ public class DNSlookup {
             printTraceServerInfo(currentServer);
         }
         System.out.println("\n");
+    }
+
+    private static void validFlagsCheck(Short flags, String fqdn, InetAddress rootNameServer) {
+        switch (flags & 0xFF) {
+            case 0:
+                break;
+            case 3:
+                System.err.println(fqdn + " -3 A " + rootNameServer.getHostAddress());
+                System.exit(-1);
+            default:
+                System.err.println(fqdn + " -2 A " + rootNameServer.getHostAddress());
+                System.exit(-1);
+        }
     }
 
     private static void printTraceServerInfo(DNSServer currentServer) {
