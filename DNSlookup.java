@@ -124,7 +124,7 @@ public class DNSlookup {
             if (currResponse.getAnswerCount() > 0) {
                 InetAddress ansIP = InetAddress.getByName(answerServers.get(0).serverNameServer);
                 // if this is an authority record
-                if (answerServers.get(0).serverType == "0x0001") {
+                if (answerServers.get(0).serverType == "A") {
                     // if this is what we're looking for then done!
                     if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverName != lookForIPofCN) {
                         // TODO: IPV6 version
@@ -136,7 +136,7 @@ public class DNSlookup {
                         nextResponse = sendAndReceivePacket(ansIP, fqdn);
                         iterateLookup(nextResponse);
                     }
-                } else if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverType == "0x0002"){
+                } else if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverType == "CN"){
                     // if get a CN answer search for the CN domain with root IP
                     nextResponse = sendAndReceivePacket(rootNameServer, answerServers.get(0).serverNameServer);
                     iterateLookup(nextResponse);
