@@ -74,9 +74,8 @@ public class DNSlookup {
         if (response.getAnswerCount() > 0) {
             // if response answer is the same as original search and type A or AAAA done
             //TODO: for loop returning all the answers if more than 1
-            if (answerServers.get(0).serverName == fqdn && answerServers.get(0).serverType == "0x0001") {
+            if (answerServers.get(0).serverName.equals(fqdn) && answerServers.get(0).serverType == "A") {
                 // TODO: IPV6 version
-                System.out.println("YA DONE");
                 System.out.println(fqdn + " " + answerServers.get(0).timeTL + "   " + answerServers.get(0).serverType + " " + answerServers.get(0).serverNameServer);
                 // you're done if you reach here
             }
@@ -126,14 +125,14 @@ public class DNSlookup {
             if (currResponse.getAnswerCount() > 0) {
                 InetAddress ansIP = InetAddress.getByName(answerServers.get(0).serverNameServer);
                 // if this is an authority record
-                if (answerServers.get(0).serverType == "A") {
+                if (answerServers.get(0).serverType.equals("A")) {
                     // if this is what we're looking for then done!
-                    if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverName != lookForIPofCN) {
+                    if (answerServers.get(0).serverName.equals(currRespDomainName) && !answerServers.get(0).serverName.equals(lookForIPofCN)) {
                         // TODO: IPV6 version
                         System.out.println("YA DONE");
                         System.out.println(fqdn + " " + answerServers.get(0).timeTL + "   " + answerServers.get(0).serverType + " " + answerServers.get(0).serverNameServer);
                         // you're done if you reach here
-                    } else if (answerServers.get(0).serverName == lookForIPofCN){
+                    } else if (answerServers.get(0).serverName.equals(lookForIPofCN)){
                         // if we find the IP address of the CN we were looking for iterate again
                         nextResponse = sendAndReceivePacket(ansIP, fqdn);
                         if (tracingOn) {
@@ -141,7 +140,7 @@ public class DNSlookup {
                         }
                         iterateLookup(nextResponse);
                     }
-                } else if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverType == "CN"){
+                } else if (answerServers.get(0).serverName.equals(currRespDomainName) && answerServers.get(0).serverType.equals("CN")){
                     // if get a CN answer search for the CN domain with root IP
                     nextResponse = sendAndReceivePacket(rootNameServer, answerServers.get(0).serverNameServer);
                     if (tracingOn) {
