@@ -142,7 +142,6 @@ public class DNSResponse {
         allRecords.add(answerServers);
         allRecords.add(authoritativeServers);
         allRecords.add(additionalRecords);
-        System.out.println(allRecords);
 	}
 
     // Takes in a short and returns it as an integer
