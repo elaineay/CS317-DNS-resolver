@@ -136,11 +136,17 @@ public class DNSlookup {
                     } else if (answerServers.get(0).serverName == lookForIPofCN){
                         // if we find the IP address of the CN we were looking for iterate again
                         nextResponse = sendAndReceivePacket(ansIP, fqdn);
+                        if (tracingOn) {
+                            printResponseInfo(nextResponse);
+                        }
                         iterateLookup(nextResponse);
                     }
                 } else if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverType == "CN"){
                     // if get a CN answer search for the CN domain with root IP
                     nextResponse = sendAndReceivePacket(rootNameServer, answerServers.get(0).serverNameServer);
+                    if (tracingOn) {
+                        printResponseInfo(nextResponse);
+                    }
                     iterateLookup(nextResponse);
                 }
             } else {
@@ -149,6 +155,9 @@ public class DNSlookup {
                     System.out.println("We made it here");
                     InetAddress additionalIP = InetAddress.getByName(additionalRecords.get(0).serverNameServer);
                     nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
+                    if (tracingOn) {
+                        printResponseInfo(nextResponse);
+                    }
                     iterateLookup(nextResponse);
                 } else {
                     String authIP = authoritativeServers.get(0).serverNameServer;
@@ -156,6 +165,9 @@ public class DNSlookup {
                     // need to keep looking for this IP until reach A record
                     lookForIPofCN = authIP;
                     nextResponse = sendAndReceivePacket(rootNameServer, lookForIPofCN);
+                    if (tracingOn) {
+                        printResponseInfo(nextResponse);
+                    }
                     iterateLookup(nextResponse);
                 }
             }
