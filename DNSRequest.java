@@ -41,8 +41,6 @@ public class DNSRequest {
         dOutput.writeShort(addCount); // # additional records
 
         String[] dnSections = fqdn.split("\\.");
-        dOutput.writeByte(dnSections.length);
-
         // write the domain into the DNS request
         for (String s : dnSections) {
             byte[] byteArray = s.getBytes("UTF-8");
@@ -57,11 +55,11 @@ public class DNSRequest {
         outputFrame = bAOutput.toByteArray();
 
         // TODO: just checking if sending
-        System.out.println("Lookup being called");
-        System.out.println("Sending: " + outputFrame.length + " bytes");
-        for (int i =0; i < outputFrame.length; i++) {
-            System.out.print("0x" + String.format("%x", outputFrame[i]) + " " );
-        }
+        // System.out.println("Lookup being called");
+        // System.out.println("Sending: " + outputFrame.length + " bytes");
+        // for (int i =0; i < outputFrame.length; i++) {
+        //     System.out.print("0x" + String.format("%x", outputFrame[i]) + " " );
+        // }
 
 
     }

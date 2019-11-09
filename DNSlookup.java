@@ -82,6 +82,7 @@ public class DNSlookup {
             }
         } else {
             // if not answer look it up iteratively
+            System.out.println("Iterator is called");
             iterateLookup(response);
         }
     }
@@ -121,6 +122,7 @@ public class DNSlookup {
             // keep iterating when you don't have an answer
             DNSResponse nextResponse;
             String currRespDomainName = currResponse.getQueryName();
+            System.out.println("NAME WE ARE QUERYING: " +currRespDomainName);
             if (currResponse.getAnswerCount() > 0) {
                 InetAddress ansIP = InetAddress.getByName(answerServers.get(0).serverNameServer);
                 // if this is an authority record
@@ -144,6 +146,7 @@ public class DNSlookup {
             } else {
                 // if answerCount = 0
                 if (currResponse.getAdditionalCount() > 0) {
+                    System.out.println("We made it here");
                     InetAddress additionalIP = InetAddress.getByName(additionalRecords.get(0).serverNameServer);
                     nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
                     iterateLookup(nextResponse);
@@ -173,19 +176,19 @@ public class DNSlookup {
         socket.receive(respPacket);
 
         //TODO: checking if received
-        System.out.println("\n\nReceived: " + respPacket.getLength() + " bytes");
+        // System.out.println("\n\nReceived: " + respPacket.getLength() + " bytes");
 
-        for (int i = 0; i < respPacket.getLength(); i++) {
-            System.out.print(" 0x" + String.format("%x", responseBytes[i]) + " ");
-        }
-        System.out.println("\n");
+        // for (int i = 0; i < respPacket.getLength(); i++) {
+        //     System.out.print(" 0x" + String.format("%x", responseBytes[i]) + " ");
+        // }
+        // System.out.println("\n");
 
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
         return response;
     }
 
     private static void printResponseInfo(DNSResponse response) {
-        System.out.println("Query ID     " + response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer);
+        System.out.println("Query ID     " + response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer.getHostAddress());
         System.out.println("Response ID: " + response.getQueryID() + " Authoritative = " + (response.getAnswerCount() > 0));
 
         System.out.println("  Answers (" + response.getAnswerCount() + ")");

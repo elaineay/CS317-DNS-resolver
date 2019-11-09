@@ -18,6 +18,7 @@ public class DNSResponse {
     private int questionCount;            // number of questions
     private int answerCount;              // number of answers
     private int authCount;                // number of authoritative records
+    private String transactionId;         // Transaction ID
 
     // Queries
     private String queryName = "";
@@ -76,25 +77,26 @@ public class DNSResponse {
         System.out.println("Domain Name System (response) \n");
 
         DataInputStream dataInput = new DataInputStream(new ByteArrayInputStream(data));
-        System.out.println("Transaction ID: " + String.format("%x", dataInput.readShort()));
+        String transactionId = String.format("%x", dataInput.readShort());
+        // System.out.println("Transaction ID: " + transactionId);
 
 
         // flags = data[1];
         flags = shortToInt(dataInput.readShort());
-        System.out.println("Flags: " + flags);
+        // System.out.println("Flags: " + flags);
 
         // QuestionCount;
         questionCount = shortToInt(dataInput.readShort());
-        System.out.println("Questions: " + questionCount);
+        // System.out.println("Questions: " + questionCount);
 
         answerCount = shortToInt(dataInput.readShort());
-        System.out.println("Answers RRs: " + answerCount);
+        // System.out.println("Answers RRs: " + answerCount);
 
         authCount = shortToInt(dataInput.readShort());
-        System.out.println("Authority RRs: " + authCount);
+        // System.out.println("Authority RRs: " + authCount);
 
         additionalCount = shortToInt(dataInput.readShort());
-        System.out.println("Additional RRs: " + additionalCount);
+        // System.out.println("Additional RRs: " + additionalCount);
 
         // References can contain references
         int recLen = 0;
@@ -107,33 +109,37 @@ public class DNSResponse {
 
             queryName += new String(record, "UTF-8") + ".";
         }
-        System.out.println("Query Name: " + queryName);
+        queryName = queryName.substring(0, queryName.length() - 1);
+        // System.out.println("Query Name: " + queryName);
 
         recordType = getTypeValue(dataInput.readShort());
-        System.out.println("Record Type: " + recordType);
-        System.out.println("Class: 0x" + String.format("%x", dataInput.readShort()));
+        // System.out.println("Record Type: " + recordType);
+
+        int classVal = (dataInput.readShort() & 0x0F);
+
+
+        // System.out.println("Class: 0x" + classVal);
 
         System.out.println("Start answer name server section");
         for (int i = 0; i < answerCount; i++) {
             DNSServer currentServer = buildServerResult(data, dataInput, true);
             answerServers.add(currentServer);
-            System.out.println("Answer Server: " + answerServers.get(i).serverNameServer);
+            // System.out.println("Answer Server: " + answerServers.get(i).serverNameServer);
         }
 
 
         System.out.println("Start authoritative name server section");
         for (int i = 0; i < authCount; i++) {
-            System.out.println("This ran: " + i);
             DNSServer currentServer = buildServerResult(data, dataInput, false);
             authoritativeServers.add(currentServer);
-            System.out.println("Authority Server: " + authoritativeServers.get(i).serverNameServer);
+            // System.out.println("Authority Server: " + authoritativeServers.get(i).serverNameServer);
         }
 
         System.out.println("Start building Additional Records");
         for (int i = 0; i < additionalCount; i++) {
             DNSServer currentServer = buildServerResult(data, dataInput, true);
             additionalRecords.add(currentServer);
-            System.out.println("Additional Records: " + additionalRecords.get(i).serverNameServer);
+            // System.out.println("Additional Records: " + additionalRecords.get(i).serverNameServer);
         }
 
         allRecords.add(answerServers);
@@ -158,17 +164,17 @@ public class DNSResponse {
             // Remove the extra "." at the end
             authName = authName.substring(0, authName.length() - 1);
         }
-        System.out.println("authName: " + authName);
+        // System.out.println("authName: " + authName);
         int authTypeVal = dataInput.readShort();
         String authType = getTypeValue(authTypeVal);
-        System.out.println("authType: "  + authType);
+        // System.out.println("authType: "  + authType);
         String authClass = String.format("%x", dataInput.readShort());
 
-        System.out.println("authClass: " + authClass);
+        // System.out.println("authClass: " + authClass);
         int authTTL = dataInput.readInt();
-        System.out.println("authTTL: " + authTTL);
+        // System.out.println("authTTL: " + authTTL);
         int authRDLen = dataInput.readShort();
-        System.out.println("authRDLen : " + authRDLen);
+        // System.out.println("authRDLen : " + authRDLen);
         String nameServer = "";
 
         if (usesIP & authType == "AAAA") {
