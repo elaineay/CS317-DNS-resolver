@@ -89,28 +89,29 @@ public class DNSlookup {
             ArrayList<DNSServer> answerServers = response.getAnswerServers();
             for (int i = 0; i < response.getAnswerCount(); i++) {
                 DNSServer currentServer = answerServers.get(i);
-                System.out.println("       " + currentServer.serverName + "                    " + currentServer.timeTL
-                 + "        " + currentServer.serverType + " " + currentServer.serverNameServer);
+                printTraceServerInfo(currentServer);
             }
 
             System.out.println("  Nameservers (" + response.getAuthCount() + ")");
             ArrayList<DNSServer> authoritativeServers = response.getAuthoritativeServers();
             for (int i = 0; i < response.getAuthCount(); i++) {
                 DNSServer currentServer = authoritativeServers.get(i);
-                System.out.println("       " + currentServer.serverName + "                    " + currentServer.timeTL
-                 + "        " + currentServer.serverType + " " + currentServer.serverNameServer);
+                printTraceServerInfo(currentServer);
             }
 
             System.out.println("  Additional Information (" + response.getAdditionalCount() + ")");
             ArrayList<DNSServer> additionalRecords = response.getAdditionalRecords();
             for (int i = 0; i < response.getAdditionalCount(); i++) {
                 DNSServer currentServer = additionalRecords.get(i);
-                System.out.println("       " + currentServer.serverName + "             " + currentServer.timeTL
-                 + "        " + currentServer.serverType + " " + currentServer.serverNameServer);
+                printTraceServerInfo(currentServer);
             }
-            System.out.println("\n\n");
+            System.out.println("\n");
+        }
+
+        if (response.getAnswerCount() > 0) {
 
         }
+
 
 
         // Format packet into byte array input stream
@@ -161,6 +162,11 @@ public class DNSlookup {
 //                lookup(rootNameServer, ns1.name, tracingOn, IPV6Query);
 //            }
 //        }
+    }
+
+    private static void printTraceServerInfo(DNSServer currentServer) {
+        String toPrint = String.format("%7s%-31s%-11s%-5s%-25s", " ", currentServer.serverName, currentServer.timeTL, currentServer.serverType, currentServer.serverNameServer);
+        System.out.println(toPrint);
     }
 
 	

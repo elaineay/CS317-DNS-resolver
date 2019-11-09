@@ -124,7 +124,7 @@ public class DNSResponse {
         for (int i = 0; i < answerCount; i++) {
             DNSServer currentServer = buildServerResult(data, dataInput, true);
             answerServers.add(currentServer);
-            System.out.println("My Server: " + answerServers.get(i).serverNameServer);
+            System.out.println("Answer Server: " + answerServers.get(i).serverNameServer);
         }
 
 
@@ -133,14 +133,14 @@ public class DNSResponse {
             System.out.println("This ran: " + i);
             DNSServer currentServer = buildServerResult(data, dataInput, false);
             authoritativeServers.add(currentServer);
-            System.out.println("My Server: " + authoritativeServers.get(i).serverNameServer);
+            System.out.println("Authority Server: " + authoritativeServers.get(i).serverNameServer);
         }
 
         System.out.println("Start building Additional Records");
         for (int i = 0; i < additionalCount; i++) {
             DNSServer currentServer = buildServerResult(data, dataInput, true);
             additionalRecords.add(currentServer);
-            System.out.println("My Server: " + additionalRecords.get(i).serverNameServer);
+            System.out.println("Additional Records: " + additionalRecords.get(i).serverNameServer);
         }
 
         allRecords.add(answerServers);
