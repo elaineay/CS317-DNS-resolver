@@ -62,30 +62,7 @@ public class DNSlookup {
         DNSResponse response = sendAndReceivePacket(rootNameServer, fqdn);
 
         if (tracingOn) {
-            System.out.println("Query ID     " + response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer);
-            System.out.println("Response ID: " + response.getQueryID() + " Authoritative = " + (response.getAnswerCount() > 0));
-
-            System.out.println("  Answers (" + response.getAnswerCount() + ")");
-            ArrayList<DNSServer> answerServers = response.getAnswerServers();
-            for (int i = 0; i < response.getAnswerCount(); i++) {
-                DNSServer currentServer = answerServers.get(i);
-                printTraceServerInfo(currentServer);
-            }
-
-            System.out.println("  Nameservers (" + response.getAuthCount() + ")");
-            ArrayList<DNSServer> authoritativeServers = response.getAuthoritativeServers();
-            for (int i = 0; i < response.getAuthCount(); i++) {
-                DNSServer currentServer = authoritativeServers.get(i);
-                printTraceServerInfo(currentServer);
-            }
-
-            System.out.println("  Additional Information (" + response.getAdditionalCount() + ")");
-            ArrayList<DNSServer> additionalRecords = response.getAdditionalRecords();
-            for (int i = 0; i < response.getAdditionalCount(); i++) {
-                DNSServer currentServer = additionalRecords.get(i);
-                printTraceServerInfo(currentServer);
-            }
-            System.out.println("\n");
+            printResponseInfo(response);
         }
 
         ArrayList<DNSServer> answerServers = response.getAnswerServers();
@@ -134,6 +111,7 @@ public class DNSlookup {
         //              once found an IP, keep using ns1 domain to search until answer.name = ns1.name
         //                  then switch back to using fqdn
 
+    //TODO: put the trace thing in for each iteration
     public static void iterateLookup(DNSResponse currResponse){
         ArrayList<DNSServer> answerServers = currResponse.getAnswerServers();
         ArrayList<DNSServer> authoritativeServers = currResponse.getAuthoritativeServers();
@@ -143,10 +121,8 @@ public class DNSlookup {
             // keep iterating when you don't have an answer
             DNSResponse nextResponse;
             String currRespDomainName = currResponse.getQueryName();
-
             if (currResponse.getAnswerCount() > 0) {
                 InetAddress ansIP = InetAddress.getByName(answerServers.get(0).serverNameServer);
-                String ansIPString = answerServers.get(0).serverNameServer;
                 // if this is an authority record
                 if (answerServers.get(0).serverType == "0x0001") {
                     // if this is what we're looking for then done!
@@ -162,7 +138,7 @@ public class DNSlookup {
                     }
                 } else if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverType == "0x0002"){
                     // if get a CN answer search for the CN domain with root IP
-                    nextResponse = sendAndReceivePacket(rootNameServer, ansIPString);
+                    nextResponse = sendAndReceivePacket(rootNameServer, answerServers.get(0).serverNameServer);
                     iterateLookup(nextResponse);
                 }
             } else {
@@ -204,18 +180,41 @@ public class DNSlookup {
         }
         System.out.println("\n");
 
-        //TODO make the respPacket into a DNSResponse
-
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
         return response;
+    }
+
+    private static void printResponseInfo(DNSResponse response) {
+        System.out.println("Query ID     " + response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer);
+        System.out.println("Response ID: " + response.getQueryID() + " Authoritative = " + (response.getAnswerCount() > 0));
+
+        System.out.println("  Answers (" + response.getAnswerCount() + ")");
+        ArrayList<DNSServer> answerServers = response.getAnswerServers();
+        for (int i = 0; i < response.getAnswerCount(); i++) {
+            DNSServer currentServer = answerServers.get(i);
+            printTraceServerInfo(currentServer);
+        }
+
+        System.out.println("  Nameservers (" + response.getAuthCount() + ")");
+        ArrayList<DNSServer> authoritativeServers = response.getAuthoritativeServers();
+        for (int i = 0; i < response.getAuthCount(); i++) {
+            DNSServer currentServer = authoritativeServers.get(i);
+            printTraceServerInfo(currentServer);
+        }
+
+        System.out.println("  Additional Information (" + response.getAdditionalCount() + ")");
+        ArrayList<DNSServer> additionalRecords = response.getAdditionalRecords();
+        for (int i = 0; i < response.getAdditionalCount(); i++) {
+            DNSServer currentServer = additionalRecords.get(i);
+            printTraceServerInfo(currentServer);
+        }
+        System.out.println("\n");
     }
 
     private static void printTraceServerInfo(DNSServer currentServer) {
         String toPrint = String.format("%7s%-31s%-11s%-5s%-25s", " ", currentServer.serverName, currentServer.timeTL, currentServer.serverType, currentServer.serverNameServer);
         System.out.println(toPrint);
     }
-
-	
     
     private static void usage() {
         System.out.println("Usage: java -jar DNSlookup.jar rootDNS name [-6|-t|t6]");
