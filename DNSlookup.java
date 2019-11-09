@@ -84,30 +84,49 @@ public class DNSlookup {
         // Format packet into byte array input stream
         DataInputStream dInput = new DataInputStream(new ByteArrayInputStream(responseBytes));
 
-//        // if the response is an A response return, else iterate
-//        //should take a response that gives an NS and then queries until finds an A record
-//        // lookup the first of the additional information servers
-//
-//        //ITERATIVE PART
-//        // if there is an answer print it
-//
+        // if the response is an A response return, else iterate
+        //should take a response that gives an NS and then queries until finds an A record
+        // lookup the first of the additional information servers
+
+        //ITERATIVE PART
+        // if there is an answer print it
+
+        // doing just IPV4 rn
+        // Response cases:
+        // There is >0 answer
+        //      1. if (fqdn = answer name && answer.type = A/AAAA)
+        //          --> DONE
+        //      2. if (fqdn = answer name && answer.type = CN)
+        //          --> lookup(rootNameServer, answer.domain name, tracingOn, IPV6Query)
+        //      3. if (ns1 name = answer name)
+        //          --> lookup(answer.ip, fqdn, tracingOn, IPV6Query)
+        //
+        // 0 answers:
+        //      1. look in nameservers, pick first= ns1. Check additional for IP. (A or AAAA)
+        //         if (IP) --> lookup(ns1.IP, fqdn, tracingOn, IPV6Query)
+        //         if (additionalInfo = 0) --> lookup(rootNameServer, ns1, tracingOn, IPV6Query)
+
+
 //        if (response.getAnswerCount() > 0) {
-//            if(tracingOn) {
-//
-//            } else if (response.answer.type == 'A'){ // if response answer type A or AAAA done
-//                // TODO: response.TTL, response.type, response.IP
-//                // TODO: IPV6 version
-//                System.out.println(fqdn + " " + response.TTL + "   " + response.type + " " + response.IP);
+//            if (response.answer.name == fqdn) {
+//                if (response.answer.type == 'A'){ // if response answer type A or AAAA done
+//                    // TODO: response.TTL, response.type, response.IP
+//                    // TODO: IPV6 version
+//                    System.out.println(fqdn + " " + response.TTL + "   " + response.type + " " + response.IP);
+//                    // you're done if you reach here
+//                } else if (response.answer.type == 'CN'){
+//                    lookup(rootNameServer, answer.domainName, tracingOn, IPV6Query);
+//                }
+//            } else if (response.answer.name = ns1.name){
+//                lookup(answer.IP, fqdn, tracingOn, IPV6Query);
 //            }
-//            //no answer
 //        } else {
-//            // TODO: authNameServer.IP, authNameServer.type
-//            if (authNameServer.[0].type == 'A') { // IPV4 address
-//                lookup(authNameServer[0].IP, fqdn, tracingOn, IPV6Query);
-//            } else if (authNameServer[0].type == 'NS') {
-//                // look through the additional section of the response to see if
-//                // it contains the IP for the domain name given
-//                lookup(the found IP, fqdn, tracingOn, IPV6Query);
+//            if (response.getAdditionalCount() > 0) {
+//                // need to get the IP of the first name server from additional section
+//                // i think also a case where lookup the ns1 name with the res ns1 ip
+//                lookup(ns1.IP, fqdn, tracingOn, IPV6Query);
+//            } else {
+//                lookup(rootNameServer, ns1.name, tracingOn, IPV6Query);
 //            }
 //        }
     }

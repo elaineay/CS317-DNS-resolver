@@ -182,6 +182,10 @@ public class DNSResponse {
 	    return answerCount;
     }
 
+    public int getAdditionalCount(){
+	    return additionalCount;
+	}
+
     // You will probably want a method to extract a compressed FQDN, IP address
     // cname, authoritative DNS servers and other values like the query ID etc.
 
