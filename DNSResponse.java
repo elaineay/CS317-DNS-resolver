@@ -162,7 +162,8 @@ public class DNSResponse {
             int pointer = Integer.decode("0x0" + authName.substring(1));
             int authNameLen = data[pointer];
             authName = handleCompression(data, pointer);
-
+            // Remove the extra "." at the end
+            authName = authName.substring(0, authName.length() - 1);
         }
         System.out.println("authName: " + authName);
         int authTypeVal = dataInput.readShort();
@@ -186,11 +187,15 @@ public class DNSResponse {
                 }
             }
             nameServer += ":" + String.format("%02X ", dataInput.readShort());
+            // remove the whitespace
+            nameServer = nameServer.replaceAll("\\s+","");
         } else if (usesIP) {
             for (int i = 0; i < authRDLen; i++) {
                 int ipVal = dataInput.readByte() & 0xFF;
                 nameServer += ipVal + ".";
             }
+            // remove extra "." at the end
+            nameServer = nameServer.substring(0, nameServer.length() - 1);
         } else {
             int recLen = 0;
             while ((recLen = dataInput.readByte()) > 0) {
@@ -206,6 +211,8 @@ public class DNSResponse {
                 int pointer = dataInput.readByte();
                 nameServer += handleCompression(data, pointer);
             }
+            // remove extra "." at the end
+            nameServer = nameServer.substring(0, nameServer.length() - 1);
         }
         DNSServer oServer = new DNSServer(authName, authType, authClass, authTTL, authRDLen, nameServer);
         return oServer;
@@ -298,9 +305,13 @@ public class DNSResponse {
 	    return answerCount;
     }
 
-    public int getAdditionalCount(){
+    public int getAdditionalCount() {
 	    return additionalCount;
 	}
+
+    public int getAuthCount() {
+        return authCount;
+    }
 
     public int getQueryID() {
         return queryID;

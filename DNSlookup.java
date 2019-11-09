@@ -81,9 +81,10 @@ public class DNSlookup {
 
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
 
-        if (true) {
+        if (tracingOn) {
             System.out.println("Query ID     " + response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer);
             System.out.println("Response ID: " + response.getQueryID() + " Authoritative = " + (response.getAnswerCount() > 0));
+            
             System.out.println("  Answers (" + response.getAnswerCount() + ")");
             ArrayList<DNSServer> answerServers = response.getAnswerServers();
             for (int i = 0; i < response.getAnswerCount(); i++) {
@@ -91,6 +92,24 @@ public class DNSlookup {
                 System.out.println("       " + currentServer.serverName + "                    " + currentServer.timeTL
                  + "        " + currentServer.serverType + " " + currentServer.serverNameServer);
             }
+
+            System.out.println("  Nameservers (" + response.getAuthCount() + ")");
+            ArrayList<DNSServer> authoritativeServers = response.getAuthoritativeServers();
+            for (int i = 0; i < response.getAuthCount(); i++) {
+                DNSServer currentServer = authoritativeServers.get(i);
+                System.out.println("       " + currentServer.serverName + "                    " + currentServer.timeTL
+                 + "        " + currentServer.serverType + " " + currentServer.serverNameServer);
+            }
+
+            System.out.println("  Additional Information (" + response.getAdditionalCount() + ")");
+            ArrayList<DNSServer> additionalRecords = response.getAdditionalRecords();
+            for (int i = 0; i < response.getAdditionalCount(); i++) {
+                DNSServer currentServer = additionalRecords.get(i);
+                System.out.println("       " + currentServer.serverName + "             " + currentServer.timeTL
+                 + "        " + currentServer.serverType + " " + currentServer.serverNameServer);
+            }
+            System.out.println("\n\n");
+
         }
 
 
