@@ -90,6 +90,9 @@ public class DNSlookup {
 
         ArrayList<DNSServer> answerServers = response.getAnswerServers();
 
+//        System.out.println("answer server class " + answerServers.get(0).serverClass);
+//        System.out.println("answer server type " + answerServers.get(0).serverType);
+
         // if this is the answer return, else iterate until answer found
         if (response.getAnswerCount() > 0) {
             // if response answer is the same as original search and type A or AAAA done
@@ -102,7 +105,7 @@ public class DNSlookup {
             }
         } else {
             // if not answer look it up iteratively
-//            iterateLookup(response);
+            iterateLookup(response);
         }
     }
 
@@ -136,51 +139,45 @@ public class DNSlookup {
         ArrayList<DNSServer> authoritativeServers = currResponse.getAuthoritativeServers();
         ArrayList<DNSServer> additionalRecords = currResponse.getAdditionalRecords();
 
-        System.out.println("answer server class " + answerServers.get(0).serverClass);
-        System.out.println("answer server type " + answerServers.get(0).serverType);
-
         try{
             // keep iterating when you don't have an answer
-            while(true){
-                DNSResponse nextResponse;
-                String currRespDomainName = currResponse.getQueryName();
+            DNSResponse nextResponse;
+            String currRespDomainName = currResponse.getQueryName();
+
+            if (currResponse.getAnswerCount() > 0) {
                 InetAddress ansIP = InetAddress.getByName(answerServers.get(0).serverNameServer);
                 String ansIPString = answerServers.get(0).serverNameServer;
-                InetAddress additionalIP = InetAddress.getByName(additionalRecords.get(0).serverNameServer);
-                String authIP = authoritativeServers.get(0).serverNameServer;
-
-                if (currResponse.getAnswerCount() > 0) {
-                    // if this is an authority record
-                    if (answerServers.get(0).serverType == "0x0001") {
-                        // if this is what we're looking for then done!
-                        if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverName != lookForIPofCN) {
-                            // TODO: IPV6 version
-                            System.out.println("YA DONE");
-                            System.out.println(fqdn + " " + answerServers.get(0).timeTL + "   " + answerServers.get(0).serverType + " " + answerServers.get(0).serverNameServer);
-                            // you're done if you reach here
-                            break;
-                        } else if (answerServers.get(0).serverName == lookForIPofCN){
-                            // if we find the IP address of the CN we were looking for iterate again
-                            nextResponse = sendAndReceivePacket(ansIP, fqdn);
-                            iterateLookup(nextResponse);
-                        }
-                    } else if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverType == "0x0002"){
-                        // if get a CN answer search for the CN domain with root IP
-                        nextResponse = sendAndReceivePacket(rootNameServer, ansIPString);
+                // if this is an authority record
+                if (answerServers.get(0).serverType == "0x0001") {
+                    // if this is what we're looking for then done!
+                    if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverName != lookForIPofCN) {
+                        // TODO: IPV6 version
+                        System.out.println("YA DONE");
+                        System.out.println(fqdn + " " + answerServers.get(0).timeTL + "   " + answerServers.get(0).serverType + " " + answerServers.get(0).serverNameServer);
+                        // you're done if you reach here
+                    } else if (answerServers.get(0).serverName == lookForIPofCN){
+                        // if we find the IP address of the CN we were looking for iterate again
+                        nextResponse = sendAndReceivePacket(ansIP, fqdn);
                         iterateLookup(nextResponse);
                     }
+                } else if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverType == "0x0002"){
+                    // if get a CN answer search for the CN domain with root IP
+                    nextResponse = sendAndReceivePacket(rootNameServer, ansIPString);
+                    iterateLookup(nextResponse);
+                }
+            } else {
+                // if answerCount = 0
+                if (currResponse.getAdditionalCount() > 0) {
+                    InetAddress additionalIP = InetAddress.getByName(additionalRecords.get(0).serverNameServer);
+                    nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
+                    iterateLookup(nextResponse);
                 } else {
-                    // if answerCount = 0
-                    if (currResponse.getAdditionalCount() > 0) {
-                        nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
-                        iterateLookup(nextResponse);
-                    } else {
-                        // when answer = 0 and additional = 0
-                        // need to keep looking for this IP until reach A record
-                        lookForIPofCN = authIP;
-                        nextResponse = sendAndReceivePacket(rootNameServer, lookForIPofCN);
-                        iterateLookup(nextResponse);
-                    }
+                    String authIP = authoritativeServers.get(0).serverNameServer;
+                    // when answer = 0 and additional = 0
+                    // need to keep looking for this IP until reach A record
+                    lookForIPofCN = authIP;
+                    nextResponse = sendAndReceivePacket(rootNameServer, lookForIPofCN);
+                    iterateLookup(nextResponse);
                 }
             }
         } catch (Exception e){}
