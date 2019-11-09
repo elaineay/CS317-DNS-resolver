@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.*;
 /**
  *
  */
@@ -79,6 +80,18 @@ public class DNSlookup {
         //TODO make the respPacket into a DNSResponse
 
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
+
+        if (true) {
+            System.out.println("Query ID     " + response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer);
+            System.out.println("Response ID: " + response.getQueryID() + " Authoritative = " + (response.getAnswerCount() > 0));
+            System.out.println("  Answers (" + response.getAnswerCount() + ")");
+            ArrayList<DNSServer> answerServers = response.getAnswerServers();
+            for (int i = 0; i < response.getAnswerCount(); i++) {
+                DNSServer currentServer = answerServers.get(i);
+                System.out.println("       " + currentServer.serverName + "                    " + currentServer.timeTL
+                 + "        " + currentServer.serverType + " " + currentServer.serverNameServer);
+            }
+        }
 
 
         // Format packet into byte array input stream

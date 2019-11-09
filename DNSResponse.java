@@ -22,6 +22,7 @@ public class DNSResponse {
     private int answerCount;              // number of answers
     private int authCount;                // number of authoritative records
 
+
     // Queries
 
 
@@ -29,24 +30,25 @@ public class DNSResponse {
     private int nsCount;                  // number of nscount response records
     private int additionalCount;          // number of additional (alternate) response records
     private boolean authoritative = false;// Is this an authoritative record
+    private String recordType;
 
-    public class DNSServer {
-        String serverName;
-        String serverType;
-        String serverClass;
-        int timeTL;
-        int dataLength;
-        String serverNameServer;
+    // public class DNSServer {
+    //     String serverName;
+    //     String serverType;
+    //     String serverClass;
+    //     int timeTL;
+    //     int dataLength;
+    //     String serverNameServer;
 
-        public DNSServer(String serverName, String serverType, String serverClass, int timeTL, int dataLength, String serverNameServer){
-            this.serverName = serverName;
-            this.serverType = serverType;
-            this.serverClass = serverClass;
-            this.timeTL = timeTL;
-            this.dataLength = dataLength;
-            this.serverNameServer = serverNameServer;
-        }
-    }
+    //     public DNSServer(String serverName, String serverType, String serverClass, int timeTL, int dataLength, String serverNameServer){
+    //         this.serverName = serverName;
+    //         this.serverType = serverType;
+    //         this.serverClass = serverClass;
+    //         this.timeTL = timeTL;
+    //         this.dataLength = dataLength;
+    //         this.serverNameServer = serverNameServer;
+    //     }
+    // }
     private ArrayList<ArrayList<DNSServer>> allRecords = new ArrayList<ArrayList<DNSServer>>();
 
     private ArrayList<DNSServer> answerServers = new ArrayList<DNSServer>();
@@ -75,7 +77,6 @@ public class DNSResponse {
 
         // TODO: Use a random class to get a random number generator to use between 0 to 65535
         queryID = data[0];
-        System.out.println("Hey we made it QueryID:" + queryID);
 
         System.out.println("Domain Name System (response) \n");
 
@@ -115,8 +116,8 @@ public class DNSResponse {
         }
         System.out.println("Query Name: " + queryName);
 
-
-        System.out.println("Record Type: 0x" + String.format("%x", dataInput.readShort()));
+        recordType = getTypeValue(dataInput.readShort());
+        System.out.println("Record Type: " + recordType);
         System.out.println("Class: 0x" + String.format("%x", dataInput.readShort()));
 
         System.out.println("Start answer name server section");
@@ -300,6 +301,26 @@ public class DNSResponse {
     public int getAdditionalCount(){
 	    return additionalCount;
 	}
+
+    public int getQueryID() {
+        return queryID;
+    }
+
+    public String getRecordType() {
+        return recordType;
+    }
+
+    public ArrayList<DNSServer> getAnswerServers() {
+        return answerServers;
+    }
+
+    public ArrayList<DNSServer> getAuthoritativeServers() {
+        return authoritativeServers;
+    }
+
+    public ArrayList<DNSServer> getAdditionalRecords() {
+        return additionalRecords;
+    }
 
     // You will probably want a method to extract a compressed FQDN, IP address
     // cname, authoritative DNS servers and other values like the query ID etc.
