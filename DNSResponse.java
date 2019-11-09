@@ -138,6 +138,11 @@ public class DNSResponse {
             additionalRecords.add(currentServer);
             System.out.println("My Server: " + additionalRecords.get(i).serverNameServer);
         }
+
+        allRecords.add(answerServers);
+        allRecords.add(authoritativeServers);
+        allRecords.add(additionalRecords);
+        System.out.println(allRecords);
 	}
 
     // Takes in a short and returns it as an integer
