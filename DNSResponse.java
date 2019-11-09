@@ -1,11 +1,8 @@
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.util.*;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 // Lots of the action associated with handling a DNS query is processing
 // the response. Although not required you might find the following skeleton of
 // a DNS response helpful. The class below has a bunch of instance data that typically needs to be
@@ -22,10 +19,8 @@ public class DNSResponse {
     private int answerCount;              // number of answers
     private int authCount;                // number of authoritative records
 
-
     // Queries
-
-
+    private String queryName = "";
     private boolean decoded = false;      // Was this response successfully decoded
     private int nsCount;                  // number of nscount response records
     private int additionalCount;          // number of additional (alternate) response records
@@ -100,8 +95,6 @@ public class DNSResponse {
 
         additionalCount = shortToInt(dataInput.readShort());
         System.out.println("Additional RRs: " + additionalCount);
-
-        String queryName = "";
 
         // References can contain references
         int recLen = 0;
@@ -315,6 +308,10 @@ public class DNSResponse {
 
     public int getQueryID() {
         return queryID;
+    }
+
+    public String getQueryName() {
+	    return queryName;
     }
 
     public String getRecordType() {

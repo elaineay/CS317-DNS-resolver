@@ -17,18 +17,19 @@ public class DNSlookup {
     static final int MIN_PERMITTED_ARGUMENT_COUNT = 2;
     static final int MAX_PERMITTED_ARGUMENT_COUNT = 3;
     static final int port = 53;
+    static String authServer1Name;
+    static boolean tracingOn = false;
+    static boolean IPV6Query = false;
+    static InetAddress rootNameServer;
+    static String fqdn;
+    static String lookForIPofCN;
 
     /**
      * @param args
      */
     public static void main(String[] args) throws Exception {
-        String fqdn;
         DNSResponse response; // Just to force compilation
         int argCount = args.length;
-        boolean tracingOn = false;
-        boolean IPV6Query = false;
-        InetAddress rootNameServer;
-
 
         if (argCount < MIN_PERMITTED_ARGUMENT_COUNT || argCount > MAX_PERMITTED_ARGUMENT_COUNT) {
             usage();
@@ -52,39 +53,18 @@ public class DNSlookup {
                 return;
             }
         }
-        lookup(rootNameServer, fqdn, tracingOn, IPV6Query);
+        lookup();
     }
 
 	// Start adding code here to initiate the lookup
 
-    public static void lookup(InetAddress rootNameServer, String fqdn, boolean tracingOn, boolean IPV6Query) throws IOException {
-        DatagramSocket socket = new DatagramSocket();
-        DNSRequest request = new DNSRequest(fqdn);
-        DatagramPacket reqPacket = request.createSendable(request, rootNameServer, port);
-        socket.send(reqPacket);
-
-        // Get response from DNS server
-        byte[] responseBytes = new byte[1024];
-        DatagramPacket respPacket = new DatagramPacket(responseBytes, responseBytes.length);
-
-        socket.receive(respPacket);
-
-        //TODO: checking if received
-        System.out.println("\n\nReceived: " + respPacket.getLength() + " bytes");
-
-        for (int i = 0; i < respPacket.getLength(); i++) {
-            System.out.print(" 0x" + String.format("%x", responseBytes[i]) + " " );
-        }
-        System.out.println("\n");
-
-        //TODO make the respPacket into a DNSResponse
-
-        DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
+    public static void lookup() throws IOException {
+        DNSResponse response = sendAndReceivePacket(rootNameServer, fqdn);
 
         if (tracingOn) {
             System.out.println("Query ID     " + response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer);
             System.out.println("Response ID: " + response.getQueryID() + " Authoritative = " + (response.getAnswerCount() > 0));
-            
+
             System.out.println("  Answers (" + response.getAnswerCount() + ")");
             ArrayList<DNSServer> answerServers = response.getAnswerServers();
             for (int i = 0; i < response.getAnswerCount(); i++) {
@@ -108,14 +88,23 @@ public class DNSlookup {
             System.out.println("\n");
         }
 
+        ArrayList<DNSServer> answerServers = response.getAnswerServers();
+
+        // if this is the answer return, else iterate until answer found
         if (response.getAnswerCount() > 0) {
-
+            // if response answer is the same as original search and type A or AAAA done
+            //TODO: for loop returning all the answers if more than 1
+            if (answerServers.get(0).serverName == fqdn && answerServers.get(0).serverType == "0x0001") {
+                // TODO: IPV6 version
+                System.out.println("YA DONE");
+                System.out.println(fqdn + " " + answerServers.get(0).timeTL + "   " + answerServers.get(0).serverType + " " + answerServers.get(0).serverNameServer);
+                // you're done if you reach here
+            }
+        } else {
+            // if not answer look it up iteratively
+//            iterateLookup(response);
         }
-
-
-
-        // Format packet into byte array input stream
-        DataInputStream dInput = new DataInputStream(new ByteArrayInputStream(responseBytes));
+    }
 
         // if the response is an A response return, else iterate
         //should take a response that gives an NS and then queries until finds an A record
@@ -130,6 +119,7 @@ public class DNSlookup {
         //      1. if (fqdn = answer name && answer.type = A/AAAA)
         //          --> DONE
         //      2. if (fqdn = answer name && answer.type = CN)
+        //          keep track of CN and keep looking for that until you get an answer
         //          --> lookup(rootNameServer, answer.domain name, tracingOn, IPV6Query)
         //      3. if (ns1 name = answer name)
         //          --> lookup(answer.ip, fqdn, tracingOn, IPV6Query)
@@ -138,30 +128,89 @@ public class DNSlookup {
         //      1. look in nameservers, pick first= ns1. Check additional for IP. (A or AAAA)
         //         if (IP) --> lookup(ns1.IP, fqdn, tracingOn, IPV6Query)
         //         if (additionalInfo = 0) --> lookup(rootNameServer, ns1, tracingOn, IPV6Query)
+        //              once found an IP, keep using ns1 domain to search until answer.name = ns1.name
+        //                  then switch back to using fqdn
 
+    public static void iterateLookup(DNSResponse currResponse){
+        ArrayList<DNSServer> answerServers = currResponse.getAnswerServers();
+        ArrayList<DNSServer> authoritativeServers = currResponse.getAuthoritativeServers();
+        ArrayList<DNSServer> additionalRecords = currResponse.getAdditionalRecords();
 
-//        if (response.getAnswerCount() > 0) {
-//            if (response.answer.name == fqdn) {
-//                if (response.answer.type == 'A'){ // if response answer type A or AAAA done
-//                    // TODO: response.TTL, response.type, response.IP
-//                    // TODO: IPV6 version
-//                    System.out.println(fqdn + " " + response.TTL + "   " + response.type + " " + response.IP);
-//                    // you're done if you reach here
-//                } else if (response.answer.type == 'CN'){
-//                    lookup(rootNameServer, answer.domainName, tracingOn, IPV6Query);
-//                }
-//            } else if (response.answer.name = ns1.name){
-//                lookup(answer.IP, fqdn, tracingOn, IPV6Query);
-//            }
-//        } else {
-//            if (response.getAdditionalCount() > 0) {
-//                // need to get the IP of the first name server from additional section
-//                // i think also a case where lookup the ns1 name with the res ns1 ip
-//                lookup(ns1.IP, fqdn, tracingOn, IPV6Query);
-//            } else {
-//                lookup(rootNameServer, ns1.name, tracingOn, IPV6Query);
-//            }
-//        }
+        System.out.println("answer server class " + answerServers.get(0).serverClass);
+        System.out.println("answer server type " + answerServers.get(0).serverType);
+
+        try{
+            // keep iterating when you don't have an answer
+            while(true){
+                DNSResponse nextResponse;
+                String currRespDomainName = currResponse.getQueryName();
+                InetAddress ansIP = InetAddress.getByName(answerServers.get(0).serverNameServer);
+                String ansIPString = answerServers.get(0).serverNameServer;
+                InetAddress additionalIP = InetAddress.getByName(additionalRecords.get(0).serverNameServer);
+                String authIP = authoritativeServers.get(0).serverNameServer;
+
+                if (currResponse.getAnswerCount() > 0) {
+                    // if this is an authority record
+                    if (answerServers.get(0).serverType == "0x0001") {
+                        // if this is what we're looking for then done!
+                        if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverName != lookForIPofCN) {
+                            // TODO: IPV6 version
+                            System.out.println("YA DONE");
+                            System.out.println(fqdn + " " + answerServers.get(0).timeTL + "   " + answerServers.get(0).serverType + " " + answerServers.get(0).serverNameServer);
+                            // you're done if you reach here
+                            break;
+                        } else if (answerServers.get(0).serverName == lookForIPofCN){
+                            // if we find the IP address of the CN we were looking for iterate again
+                            nextResponse = sendAndReceivePacket(ansIP, fqdn);
+                            iterateLookup(nextResponse);
+                        }
+                    } else if (answerServers.get(0).serverName == currRespDomainName && answerServers.get(0).serverType == "0x0002"){
+                        // if get a CN answer search for the CN domain with root IP
+                        nextResponse = sendAndReceivePacket(rootNameServer, ansIPString);
+                        iterateLookup(nextResponse);
+                    }
+                } else {
+                    // if answerCount = 0
+                    if (currResponse.getAdditionalCount() > 0) {
+                        nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
+                        iterateLookup(nextResponse);
+                    } else {
+                        // when answer = 0 and additional = 0
+                        // need to keep looking for this IP until reach A record
+                        lookForIPofCN = authIP;
+                        nextResponse = sendAndReceivePacket(rootNameServer, lookForIPofCN);
+                        iterateLookup(nextResponse);
+                    }
+                }
+            }
+        } catch (Exception e){}
+
+    }
+
+    private static DNSResponse sendAndReceivePacket(InetAddress server, String domainName) throws IOException{
+        DatagramSocket socket = new DatagramSocket();
+        DNSRequest request = new DNSRequest(domainName);
+        DatagramPacket reqPacket = request.createSendable(request, server, port);
+        socket.send(reqPacket);
+
+        // Get response from DNS server
+        byte[] responseBytes = new byte[1024];
+        DatagramPacket respPacket = new DatagramPacket(responseBytes, responseBytes.length);
+
+        socket.receive(respPacket);
+
+        //TODO: checking if received
+        System.out.println("\n\nReceived: " + respPacket.getLength() + " bytes");
+
+        for (int i = 0; i < respPacket.getLength(); i++) {
+            System.out.print(" 0x" + String.format("%x", responseBytes[i]) + " ");
+        }
+        System.out.println("\n");
+
+        //TODO make the respPacket into a DNSResponse
+
+        DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
+        return response;
     }
 
     private static void printTraceServerInfo(DNSServer currentServer) {
