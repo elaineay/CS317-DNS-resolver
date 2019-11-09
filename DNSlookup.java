@@ -152,7 +152,6 @@ public class DNSlookup {
             } else {
                 // if answerCount = 0
                 if (currResponse.getAdditionalCount() > 0) {
-                    System.out.println("We made it here");
                     InetAddress additionalIP = InetAddress.getByName(additionalRecords.get(0).serverNameServer);
                     nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
                     if (tracingOn) {

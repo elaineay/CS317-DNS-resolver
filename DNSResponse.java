@@ -120,7 +120,7 @@ public class DNSResponse {
 
         // System.out.println("Class: 0x" + classVal);
 
-        System.out.println("Start answer name server section");
+        // System.out.println("Start answer name server section");
         for (int i = 0; i < answerCount; i++) {
             DNSServer currentServer = buildServerResult(data, dataInput, true);
             answerServers.add(currentServer);
@@ -128,14 +128,14 @@ public class DNSResponse {
         }
 
 
-        System.out.println("Start authoritative name server section");
+        // System.out.println("Start authoritative name server section");
         for (int i = 0; i < authCount; i++) {
             DNSServer currentServer = buildServerResult(data, dataInput, false);
             authoritativeServers.add(currentServer);
             // System.out.println("Authority Server: " + authoritativeServers.get(i).serverNameServer);
         }
 
-        System.out.println("Start building Additional Records");
+        // System.out.println("Start building Additional Records");
         for (int i = 0; i < additionalCount; i++) {
             DNSServer currentServer = buildServerResult(data, dataInput, true);
             additionalRecords.add(currentServer);
