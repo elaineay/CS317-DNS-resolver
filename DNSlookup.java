@@ -199,7 +199,7 @@ public class DNSlookup {
         //     System.out.print(" 0x" + String.format("%x", responseBytes[i]) + " ");
         // }
         // System.out.println("\n");
-
+        // System.out.println("We are using responsebyte: "  + responseBytes + " with length: " + respPacket.getLength());
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
         return response;
     }

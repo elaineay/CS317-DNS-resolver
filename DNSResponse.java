@@ -73,7 +73,6 @@ public class DNSResponse {
 
         // TODO: Use a random class to get a random number generator to use between 0 to 65535
         queryID = data[0];
-
         System.out.println("Domain Name System (response) \n");
 
         DataInputStream dataInput = new DataInputStream(new ByteArrayInputStream(data));
@@ -92,10 +91,11 @@ public class DNSResponse {
         answerCount = shortToInt(dataInput.readShort());
         // System.out.println("Answers RRs: " + answerCount);
 
-        authCount = shortToInt(dataInput.readShort());
+        // authCount = shortToInt(dataInput.readShort());
+        authCount = dataInput.readByte() + dataInput.readByte();
         // System.out.println("Authority RRs: " + authCount);
 
-        additionalCount = shortToInt(dataInput.readShort());
+        additionalCount = dataInput.readByte() + dataInput.readByte();
         // System.out.println("Additional RRs: " + additionalCount);
 
         // References can contain references
