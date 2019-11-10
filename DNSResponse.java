@@ -72,7 +72,7 @@ public class DNSResponse {
 	    // Extract the query ID
 
         // TODO: Use a random class to get a random number generator to use between 0 to 65535
-        queryID = data[0];
+        queryID = data[0] & 0xFF;
         System.out.println("Domain Name System (response) \n");
 
         DataInputStream dataInput = new DataInputStream(new ByteArrayInputStream(data));

@@ -157,8 +157,9 @@ public class DNSlookup {
                 if (currResponse.getAdditionalCount() > 0) {
                     InetAddress additionalIP = InetAddress.getByName(additionalRecords.get(0).serverNameServer);
                     nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
-                    System.out.println("NextReponse flags:" + String.format("%x", nextResponse.getFlags()));
-                    // validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
+                    System.out.println("Next Reponse flags:" + String.format("%x", nextResponse.getFlags()));
+                    System.out.println("Flags value is: " + (nextResponse.getFlags() & 0x0F));
+                    validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
                     if (tracingOn) {
                         printResponseInfo(nextResponse);
                     }
@@ -169,7 +170,7 @@ public class DNSlookup {
                     // need to keep looking for this IP until reach A record
                     lookForIPofCN = authIP;
                     nextResponse = sendAndReceivePacket(rootNameServer, lookForIPofCN);
-                    // validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
+                    validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
                     if (tracingOn) {
                         printResponseInfo(nextResponse);
                     }
@@ -205,8 +206,8 @@ public class DNSlookup {
     }
 
     private static void printResponseInfo(DNSResponse response) {
-        System.out.println("Query ID     " + response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer.getHostAddress());
-        System.out.println("Response ID: " + response.getQueryID() + " Authoritative = " + (response.getAnswerCount() > 0));
+        System.out.println("Query ID     " + (int)response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer.getHostAddress());
+        System.out.println("Response ID: " + (int)response.getQueryID() + " Authoritative = " + (response.getAnswerCount() > 0));
 
         System.out.println("  Answers (" + response.getAnswerCount() + ")");
         ArrayList<DNSServer> answerServers = response.getAnswerServers();
@@ -232,7 +233,7 @@ public class DNSlookup {
     }
 
     private static void validFlagsCheck(Short flags, String fqdn, InetAddress rootNameServer) {
-        switch (flags & 0xFF) {
+        switch (flags & 0x0F) {
             case 0:
                 break;
             case 3:
