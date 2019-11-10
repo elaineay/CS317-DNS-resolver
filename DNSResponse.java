@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public class DNSResponse {
     // DNS section
     private int queryID;                  // this is for the response it must match the one in the request 
-    private int flags;                    // type of response this is
+    private Short flags;                    // type of response this is
     private int questionCount;            // number of questions
     private int answerCount;              // number of answers
     private int authCount;                // number of authoritative records
@@ -73,7 +73,6 @@ public class DNSResponse {
 
         // TODO: Use a random class to get a random number generator to use between 0 to 65535
         queryID = data[0];
-
         System.out.println("Domain Name System (response) \n");
 
         DataInputStream dataInput = new DataInputStream(new ByteArrayInputStream(data));
@@ -82,7 +81,7 @@ public class DNSResponse {
 
 
         // flags = data[1];
-        flags = shortToInt(dataInput.readShort());
+        flags = dataInput.readShort();
         // System.out.println("Flags: " + flags);
 
         // QuestionCount;
@@ -92,10 +91,11 @@ public class DNSResponse {
         answerCount = shortToInt(dataInput.readShort());
         // System.out.println("Answers RRs: " + answerCount);
 
-        authCount = shortToInt(dataInput.readShort());
+        // authCount = shortToInt(dataInput.readShort());
+        authCount = dataInput.readByte() + dataInput.readByte();
         // System.out.println("Authority RRs: " + authCount);
 
-        additionalCount = shortToInt(dataInput.readShort());
+        additionalCount = dataInput.readByte() + dataInput.readByte();
         // System.out.println("Additional RRs: " + additionalCount);
 
         // References can contain references
@@ -148,7 +148,7 @@ public class DNSResponse {
 	}
 
     // Takes in a short and returns it as an integer
-    private Integer shortToInt(short s) {
+    public Integer shortToInt(short s) {
         String str = String.format("%x", s);
         return Integer.parseInt(str);
     }
@@ -322,6 +322,10 @@ public class DNSResponse {
 
     public String getRecordType() {
         return recordType;
+    }
+
+    public Short getFlags() {
+        return flags;
     }
 
     public ArrayList<DNSServer> getAnswerServers() {
