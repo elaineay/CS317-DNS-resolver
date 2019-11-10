@@ -18,6 +18,7 @@ public class DNSlookup {
     static final int MIN_PERMITTED_ARGUMENT_COUNT = 2;
     static final int MAX_PERMITTED_ARGUMENT_COUNT = 3;
     static final int port = 53;
+    static int numLookUps = 1;
     static String authServer1Name;
     static boolean tracingOn = false;
     static boolean IPV6Query = false;
@@ -117,6 +118,11 @@ public class DNSlookup {
         ArrayList<DNSServer> answerServers = currResponse.getAnswerServers();
         ArrayList<DNSServer> authoritativeServers = currResponse.getAuthoritativeServers();
         ArrayList<DNSServer> additionalRecords = currResponse.getAdditionalRecords();
+        numLookUps++;
+        if (numLookUps == 30) {
+            System.err.println(fqdn + " -3 A " + rootNameServer.getHostAddress());
+            System.exit(-1);
+        }
 
         try{
             // keep iterating when you don't have an answer
