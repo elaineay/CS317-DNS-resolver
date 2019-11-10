@@ -213,7 +213,7 @@ public class DNSResponse {
                 nameServer += handleCompression(data, pointer);
             }
             // remove extra "." at the end, add safety for error on linux
-            if (nameServer.length()) {
+            if (nameServer.length() > 0) {
                 nameServer = nameServer.substring(0, nameServer.length() - 1);
             }  
         }
