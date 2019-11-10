@@ -215,7 +215,7 @@ public class DNSlookup {
                 sendAttempt++;
                 if (tracingOn) {
                     System.out.println("\n");
-                    System.out.println("Query ID     " + (int)request.getTransactionID() + " " + domainName + "  " + request.getIPVType() + " --> " + rootNameServer.getHostAddress());
+                    System.out.println("Query ID     " + (int)request.getTransactionID() + " " + domainName + "  " + request.getIPVType() + " --> " + server.getHostAddress());
                 }
                 if (sendAttempt < 2) {
                     socket.send(reqPacket);
@@ -239,7 +239,7 @@ public class DNSlookup {
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
         if (tracingOn) {
             System.out.println("\n");
-            System.out.println("Query ID     " + (int)response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer.getHostAddress()); 
+            System.out.println("Query ID     " + (int)response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + server.getHostAddress()); 
         }
         return response;
     }
