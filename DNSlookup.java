@@ -237,12 +237,14 @@ public class DNSlookup {
         // System.out.println("\n");
         // System.out.println("We are using responsebyte: "  + responseBytes + " with length: " + respPacket.getLength());
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
+        if (tracingOn) {
+            System.out.println("\n");
+            System.out.println("Query ID     " + (int)response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer.getHostAddress()); 
+        }
         return response;
     }
 
     private static void printResponseInfo(DNSResponse response) {
-        System.out.println("\n");
-        System.out.println("Query ID     " + (int)response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer.getHostAddress()); 
         System.out.println("Response ID: " + (int)response.getQueryID() + " Authoritative = " + (response.getAnswerCount() > 0));
 
         System.out.println("  Answers (" + response.getAnswerCount() + ")");
