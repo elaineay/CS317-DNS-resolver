@@ -180,11 +180,14 @@ public class DNSResponse {
             for (int i = 0; i < authRDLen/2 - 1; i++) {
                 short ipv6Short = dataInput.readShort();
                 String ipv6address = String.format("%02X ", ipv6Short);
-                if (ipv6Short != 0) {
+                if (ipv6Short == 0) {
+                    nameServer += 0 + ":";
+                } else {
                     nameServer += ipv6address + ":";
                 }
             }
-            nameServer += ":" + String.format("%02X ", dataInput.readShort());
+            // We don't want a colon for the last one, remove leading 0s
+            nameServer += String.format("%02X ", dataInput.readShort()).replaceFirst("^0+(?!$)", "");
             // remove the whitespace
             nameServer = nameServer.replaceAll("\\s+","");
         } else if (usesIP & authType != "CN") {
