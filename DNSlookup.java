@@ -216,11 +216,13 @@ public class DNSlookup {
                 if (sendAttempt < 2) {
                     socket.send(reqPacket);
                     if (tracingOn) {
+                        System.out.println("\n");
                         System.out.println("Query ID     " + (int)request.getTransactionID() + " " + domainName + "  " + request.getIPVType() + " --> " + rootNameServer.getHostAddress());
                     }
                     continue;
                 } else {
                     if (tracingOn) {
+                        System.out.println("\n");
                         System.out.println("Query ID     " + (int)request.getTransactionID() + " " + domainName + "  " + request.getIPVType() + " --> " + rootNameServer.getHostAddress());
                     }
                     System.err.println(domainName + " -2 A 0.0.0.0");
@@ -239,7 +241,10 @@ public class DNSlookup {
         // System.out.println("\n");
         // System.out.println("We are using responsebyte: "  + responseBytes + " with length: " + respPacket.getLength());
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
-        System.out.println("Query ID     " + (int)response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer.getHostAddress());
+        if (tracingOn) {
+            System.out.println("\n");
+            System.out.println("Query ID     " + (int)response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer.getHostAddress()); 
+        }
         return response;
     }
 
@@ -266,7 +271,6 @@ public class DNSlookup {
             DNSServer currentServer = additionalRecords.get(i);
             printTraceServerInfo(currentServer);
         }
-        System.out.println("\n");
     }
 
     private static void validFlagsCheck(Short flags, String fqdn, DNSResponse response) {
