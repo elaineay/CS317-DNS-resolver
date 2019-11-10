@@ -188,7 +188,7 @@ public class DNSResponse {
             nameServer += ":" + String.format("%02X ", dataInput.readShort());
             // remove the whitespace
             nameServer = nameServer.replaceAll("\\s+","");
-        } else if (usesIP) {
+        } else if (usesIP & authType != "CN") {
             for (int i = 0; i < authRDLen; i++) {
                 int ipVal = dataInput.readByte() & 0xFF;
                 nameServer += ipVal + ".";
@@ -255,7 +255,7 @@ public class DNSResponse {
                 authType = "MF";
                 break;
             case 5:
-                authType = "CNAME";
+                authType = "CN";
                 break;
             case 6:
                 authType = "SOA";
