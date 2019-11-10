@@ -154,19 +154,30 @@ public class DNSlookup {
             } else {
                 // if answerCount = 0
                 if (currResponse.getAdditionalCount() > 0) {
-                    InetAddress additionalIP = InetAddress.getByName(additionalRecords.get(0).serverNameServer);
-                    nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
-                    System.out.println("NextReponse flags:" + String.format("%x", nextResponse.getFlags()));
-                    // validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
-                    if (tracingOn) {
-                        printResponseInfo(nextResponse);
+                    if (!IPV6Query) {
+                        boolean foundCorrectIP = false;
+                        int correctRecord = 0;
+                        InetAddress additionalIP;
+                        while (!foundCorrectIP) {
+                            if (additionalRecords.get(correctRecord).serverType != "A") {
+                                correctRecord++;
+                            }
+                            foundCorrectIP = true;
+                        }
+                        additionalIP = InetAddress.getByName(additionalRecords.get(correctRecord).serverNameServer);
+                        nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
+                        System.out.println("NextReponse flags:" + String.format("%x", nextResponse.getFlags()));
+                        // validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
+                        if (tracingOn) {
+                            printResponseInfo(nextResponse);
+                        }
+                        iterateLookup(nextResponse);
                     }
-                    iterateLookup(nextResponse);
                 } else {
-                    String authIP = authoritativeServers.get(0).serverNameServer;
+                    String authIPName = authoritativeServers.get(0).serverNameServer;
                     // when answer = 0 and additional = 0
                     // need to keep looking for this IP until reach A record
-                    lookForIPofCN = authIP;
+                    lookForIPofCN = authIPName;
                     nextResponse = sendAndReceivePacket(rootNameServer, lookForIPofCN);
                     // validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
                     if (tracingOn) {
