@@ -311,7 +311,6 @@ public class DNSlookup {
 
     private static DNSServer getCompatible(int maxCount, ArrayList<DNSServer> loopServers, boolean nsSwitch) {
         String query = "A";
-        System.out.println(nsSwitch);
         if (nsSwitch) {
             query = "AAAA";
         }
