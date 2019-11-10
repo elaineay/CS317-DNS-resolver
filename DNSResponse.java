@@ -1,8 +1,8 @@
-import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 // Lots of the action associated with handling a DNS query is processing
 // the response. Although not required you might find the following skeleton of
 // a DNS response helpful. The class below has a bunch of instance data that typically needs to be
@@ -14,36 +14,37 @@ import java.util.*;
 public class DNSResponse {
     // DNS section
     private int queryID;                  // this is for the response it must match the one in the request 
-    private int flags;                    // type of response this is
+    private Short flags;                    // type of response this is
     private int questionCount;            // number of questions
-    private int answerCount = 0;          // number of answers
+    private int answerCount;              // number of answers
     private int authCount;                // number of authoritative records
+    private String transactionId;         // Transaction ID
 
     // Queries
-
-
+    private String queryName = "";
     private boolean decoded = false;      // Was this response successfully decoded
-    private int nsCount = 0;              // number of nscount response records
-    private int additionalCount = 0;      // number of additional (alternate) response records
+    private int nsCount;                  // number of nscount response records
+    private int additionalCount;          // number of additional (alternate) response records
     private boolean authoritative = false;// Is this an authoritative record
+    private String recordType;
 
-    public class DNSServer {
-        String serverName;
-        String serverType;
-        String serverClass;
-        int timeTL;
-        int dataLength;
-        String serverNameServer;
+    // public class DNSServer {
+    //     String serverName;
+    //     String serverType;
+    //     String serverClass;
+    //     int timeTL;
+    //     int dataLength;
+    //     String serverNameServer;
 
-        public DNSServer(String serverName, String serverType, String serverClass, int timeTL, int dataLength, String serverNameServer){
-            this.serverName = serverName;
-            this.serverType = serverType;
-            this.serverClass = serverClass;
-            this.timeTL = timeTL;
-            this.dataLength = dataLength;
-            this.serverNameServer = serverNameServer;
-        }
-    }
+    //     public DNSServer(String serverName, String serverType, String serverClass, int timeTL, int dataLength, String serverNameServer){
+    //         this.serverName = serverName;
+    //         this.serverType = serverType;
+    //         this.serverClass = serverClass;
+    //         this.timeTL = timeTL;
+    //         this.dataLength = dataLength;
+    //         this.serverNameServer = serverNameServer;
+    //     }
+    // }
     private ArrayList<ArrayList<DNSServer>> allRecords = new ArrayList<ArrayList<DNSServer>>();
 
     private ArrayList<DNSServer> answerServers = new ArrayList<DNSServer>();
@@ -71,33 +72,30 @@ public class DNSResponse {
 	    // Extract the query ID
 
         // TODO: Use a random class to get a random number generator to use between 0 to 65535
-        queryID = data[0];
-        System.out.println("Hey we made it QueryID:" + queryID);
-
-        System.out.println("Domain Name System (response) \n");
+        queryID = data[0] & 0xFF;
 
         DataInputStream dataInput = new DataInputStream(new ByteArrayInputStream(data));
-        System.out.println("Transaction ID: " + String.format("%x", dataInput.readShort()));
+        String transactionId = String.format("%x", dataInput.readShort());
+        // System.out.println("Transaction ID: " + transactionId);
 
 
         // flags = data[1];
-        flags = shortToInt(dataInput.readShort());
-        System.out.println("Flags: " + flags);
+        flags = dataInput.readShort();
+        // System.out.println("Flags: " + flags);
 
         // QuestionCount;
         questionCount = shortToInt(dataInput.readShort());
-        System.out.println("Questions: " + questionCount);
+        // System.out.println("Questions: " + questionCount);
 
         answerCount = shortToInt(dataInput.readShort());
-        System.out.println("Answers RRs: " + answerCount);
+        // System.out.println("Answers RRs: " + answerCount);
 
-        authCount = shortToInt(dataInput.readShort());
-        System.out.println("Authority RRs: " + authCount);
+        // authCount = shortToInt(dataInput.readShort());
+        authCount = dataInput.readByte() + dataInput.readByte();
+        // System.out.println("Authority RRs: " + authCount);
 
-        additionalCount = shortToInt(dataInput.readShort());
-        System.out.println("Additional RRs: " + additionalCount);
-
-        String queryName = "";
+        additionalCount = dataInput.readByte() + dataInput.readByte();
+        // System.out.println("Additional RRs: " + additionalCount);
 
         // References can contain references
         int recLen = 0;
@@ -110,33 +108,37 @@ public class DNSResponse {
 
             queryName += new String(record, "UTF-8") + ".";
         }
-        System.out.println("Query Name: " + queryName);
+        queryName = queryName.substring(0, queryName.length() - 1);
+        // System.out.println("Query Name: " + queryName);
+
+        recordType = getTypeValue(dataInput.readShort());
+        // System.out.println("Record Type: " + recordType);
+
+        int classVal = (dataInput.readShort() & 0x0F);
 
 
-        System.out.println("Record Type: 0x" + String.format("%x", dataInput.readShort()));
-        System.out.println("Class: 0x" + String.format("%x", dataInput.readShort()));
+        // System.out.println("Class: 0x" + classVal);
 
-        System.out.println("Start answer name server section");
+        // System.out.println("Start answer name server section");
         for (int i = 0; i < answerCount; i++) {
             DNSServer currentServer = buildServerResult(data, dataInput, true);
             answerServers.add(currentServer);
-            System.out.println("My Server: " + answerServers.get(i).serverNameServer);
+            // System.out.println("Answer Server: " + answerServers.get(i).serverNameServer);
         }
 
 
-        System.out.println("Start authoritative name server section");
+        // System.out.println("Start authoritative name server section");
         for (int i = 0; i < authCount; i++) {
-            System.out.println("This ran: " + i);
             DNSServer currentServer = buildServerResult(data, dataInput, false);
             authoritativeServers.add(currentServer);
-            System.out.println("My Server: " + authoritativeServers.get(i).serverNameServer);
+            // System.out.println("Authority Server: " + authoritativeServers.get(i).serverNameServer);
         }
 
-        System.out.println("Start building Additional Records");
+        // System.out.println("Start building Additional Records");
         for (int i = 0; i < additionalCount; i++) {
             DNSServer currentServer = buildServerResult(data, dataInput, true);
             additionalRecords.add(currentServer);
-            System.out.println("My Server: " + additionalRecords.get(i).serverNameServer);
+            // System.out.println("Additional Records: " + additionalRecords.get(i).serverNameServer);
         }
 
         allRecords.add(answerServers);
@@ -145,7 +147,7 @@ public class DNSResponse {
 	}
 
     // Takes in a short and returns it as an integer
-    private Integer shortToInt(short s) {
+    public Integer shortToInt(short s) {
         String str = String.format("%x", s);
         return Integer.parseInt(str);
     }
@@ -158,35 +160,43 @@ public class DNSResponse {
             int pointer = Integer.decode("0x0" + authName.substring(1));
             int authNameLen = data[pointer];
             authName = handleCompression(data, pointer);
-
+            // Remove the extra "." at the end
+            authName = authName.substring(0, authName.length() - 1);
         }
-        System.out.println("authName: " + authName);
+        // System.out.println("authName: " + authName);
         int authTypeVal = dataInput.readShort();
         String authType = getTypeValue(authTypeVal);
-        System.out.println("authType: "  + authType);
+        // System.out.println("authType: "  + authType);
         String authClass = String.format("%x", dataInput.readShort());
 
-        System.out.println("authClass: " + authClass);
+        // System.out.println("authClass: " + authClass);
         int authTTL = dataInput.readInt();
-        System.out.println("authTTL: " + authTTL);
+        // System.out.println("authTTL: " + authTTL);
         int authRDLen = dataInput.readShort();
-        System.out.println("authRDLen : " + authRDLen);
+        // System.out.println("authRDLen : " + authRDLen);
         String nameServer = "";
 
         if (usesIP & authType == "AAAA") {
             for (int i = 0; i < authRDLen/2 - 1; i++) {
                 short ipv6Short = dataInput.readShort();
                 String ipv6address = String.format("%02X ", ipv6Short);
-                if (ipv6Short != 0) {
+                if (ipv6Short == 0) {
+                    nameServer += 0 + ":";
+                } else {
                     nameServer += ipv6address + ":";
                 }
             }
-            nameServer += ":" + String.format("%02X ", dataInput.readShort());
-        } else if (usesIP) {
+            // We don't want a colon for the last one, remove leading 0s
+            nameServer += String.format("%02X ", dataInput.readShort()).replaceFirst("^0+(?!$)", "");
+            // remove the whitespace
+            nameServer = nameServer.replaceAll("\\s+","");
+        } else if (usesIP & authType != "CN") {
             for (int i = 0; i < authRDLen; i++) {
                 int ipVal = dataInput.readByte() & 0xFF;
                 nameServer += ipVal + ".";
             }
+            // remove extra "." at the end
+            nameServer = nameServer.substring(0, nameServer.length() - 1);
         } else {
             int recLen = 0;
             while ((recLen = dataInput.readByte()) > 0) {
@@ -202,6 +212,8 @@ public class DNSResponse {
                 int pointer = dataInput.readByte();
                 nameServer += handleCompression(data, pointer);
             }
+            // remove extra "." at the end
+            nameServer = nameServer.substring(0, nameServer.length() - 1);
         }
         DNSServer oServer = new DNSServer(authName, authType, authClass, authTTL, authRDLen, nameServer);
         return oServer;
@@ -245,7 +257,7 @@ public class DNSResponse {
                 authType = "MF";
                 break;
             case 5:
-                authType = "CNAME";
+                authType = "CN";
                 break;
             case 6:
                 authType = "SOA";
@@ -288,6 +300,46 @@ public class DNSResponse {
                 authType = "NULL";
         }
         return authType;
+    }
+
+    public int getAnswerCount() {
+	    return answerCount;
+    }
+
+    public int getAdditionalCount() {
+	    return additionalCount;
+	}
+
+    public int getAuthCount() {
+        return authCount;
+    }
+
+    public int getQueryID() {
+        return queryID;
+    }
+
+    public String getQueryName() {
+	    return queryName;
+    }
+
+    public String getRecordType() {
+        return recordType;
+    }
+
+    public Short getFlags() {
+        return flags;
+    }
+
+    public ArrayList<DNSServer> getAnswerServers() {
+        return answerServers;
+    }
+
+    public ArrayList<DNSServer> getAuthoritativeServers() {
+        return authoritativeServers;
+    }
+
+    public ArrayList<DNSServer> getAdditionalRecords() {
+        return additionalRecords;
     }
 
     // You will probably want a method to extract a compressed FQDN, IP address

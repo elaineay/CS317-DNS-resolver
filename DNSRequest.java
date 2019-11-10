@@ -3,6 +3,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.util.Random;
 
 public class DNSRequest {
     private int transactionID;
@@ -14,16 +15,19 @@ public class DNSRequest {
 
     private int ending = 0x00;
     private int typeA = 0x0001;
+    private int typeAAAA = 0x001c;
     private int classIN = 0x0001;
 
     private byte[] outputFrame;
 
 
-    public DNSRequest(String fqdn) throws IOException {
+    public DNSRequest(String fqdn, boolean isIPV6) throws IOException {
         ByteArrayOutputStream bAOutput = new ByteArrayOutputStream();
         DataOutputStream dOutput = new DataOutputStream(bAOutput);
 
-        transactionID = 0x1234;
+        Random randomGenerator = new Random();
+
+        transactionID = randomGenerator.nextInt(0xFFFF)+1;
         flag = 0x0100;
         questionCount = 0x0001;
         answerCount = 0x0000;
@@ -38,32 +42,34 @@ public class DNSRequest {
         dOutput.writeShort(addCount); // # additional records
 
         String[] dnSections = fqdn.split("\\.");
-        dOutput.writeByte(dnSections.length);
-
+        // write the domain into the DNS request
         for (String s : dnSections) {
             byte[] byteArray = s.getBytes("UTF-8");
+            dOutput.write(byteArray.length);
             dOutput.write(byteArray);
         }
 
         dOutput.writeByte(ending); //signify end of DNS request
-        dOutput.writeShort(typeA); // record type A (host request)
+        if (isIPV6) {
+            dOutput.writeShort(typeAAAA);
+        } else {
+            dOutput.writeShort(typeA);
+        } // record type A (host request)
         dOutput.writeShort(classIN); // class IN
 
         outputFrame = bAOutput.toByteArray();
 
         // TODO: just checking if sending
-        System.out.println("dnsRequest run");
-        System.out.println("Sending: " + outputFrame.length + " bytes");
-        for (int i =0; i < outputFrame.length; i++) {
-            System.out.print("0x" + String.format("%x", outputFrame[i]) + " " );
-        }
+        // System.out.println("Lookup being called");
+        // System.out.println("Sending: " + outputFrame.length + " bytes");
+        // for (int i =0; i < outputFrame.length; i++) {
+        //     System.out.print("0x" + String.format("%x", outputFrame[i]) + " " );
+        // }
 
 
     }
 
     public DatagramPacket createSendable(DNSRequest dnsRequest,InetAddress rootNameServer, int port) {
-
-
         DatagramPacket reqPacket = new DatagramPacket(dnsRequest.outputFrame,
                 dnsRequest.outputFrame.length,
                 rootNameServer,
