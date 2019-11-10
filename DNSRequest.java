@@ -14,8 +14,7 @@ public class DNSRequest {
     private int addCount;
 
     private int ending = 0x00;
-    private int typeA = 0x0001;
-    private int typeAAAA = 0x001c;
+    private int type = 0x0001;
     private int classIN = 0x0001;
 
     private byte[] outputFrame;
@@ -51,10 +50,10 @@ public class DNSRequest {
 
         dOutput.writeByte(ending); //signify end of DNS request
         if (isIPV6) {
-            dOutput.writeShort(typeAAAA);
-        } else {
-            dOutput.writeShort(typeA);
-        } // record type A (host request)
+            type = 0x001c;
+        }
+        dOutput.writeShort(type);
+         // record type A (host request)
         dOutput.writeShort(classIN); // class IN
 
         outputFrame = bAOutput.toByteArray();
@@ -67,6 +66,19 @@ public class DNSRequest {
         // }
 
 
+    }
+
+    public int getTransactionID() {
+        return transactionID;
+    }
+
+    public String getIPVType() {
+        switch(type) {
+            case 0x001c:
+                return "AAAA";
+            default:
+                return "A";
+        }
     }
 
     public DatagramPacket createSendable(DNSRequest dnsRequest,InetAddress rootNameServer, int port) {
