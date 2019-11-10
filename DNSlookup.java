@@ -127,12 +127,12 @@ public class DNSlookup {
                 // if this is an authority record
                 if (answerServers.get(0).serverType.equals("A")) {
                     // if this is what we're looking for then done!
-                    if (answerServers.get(0).serverName.equals(currRespDomainName) && !answerServers.get(0).serverName.equals(lookForIPofCN)) {
+                    if (!answerServers.get(0).serverName.equals(lookForIPofCN)) {
                         // TODO: IPV6 version
                         System.out.println("YA DONE");
                         System.out.println(fqdn + " " + answerServers.get(0).timeTL + "   " + answerServers.get(0).serverType + " " + answerServers.get(0).serverNameServer);
                         // you're done if you reach here
-                    } else if (answerServers.get(0).serverName.equals(lookForIPofCN)){
+                    } else {
                         // if we find the IP address of the CN we were looking for iterate again
                         nextResponse = sendAndReceivePacket(ansIP, fqdn);
                         if (tracingOn) {
@@ -194,6 +194,7 @@ public class DNSlookup {
         // System.out.println("\n");
 
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
+        System.out.println("Answer count " + response.getAnswerCount());
         return response;
     }
 
