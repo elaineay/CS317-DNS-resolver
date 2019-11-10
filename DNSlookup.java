@@ -139,39 +139,38 @@ public class DNSlookup {
                 DNSServer ansCompatible = getCompatible(currResponse.getAnswerCount(), currResponse.getAnswerServers());
                 System.out.println(ansCompatible);
                 InetAddress ansIP = InetAddress.getByName(ansCompatible.serverNameServer);
-                // if this is an authority record
-                if (ansCompatible.serverType.equals(queryType)) {
+
+                if (answerServers.get(0).serverType.equals("CN")){
+                    // if get a CN answer search for the CN domain with root IP
+                    nextResponse = sendAndReceivePacket(rootNameServer, answerServers.get(0).serverNameServer, IPV6Query);
+                    validFlagsCheck(nextResponse.getFlags(), fqdn, nextResponse);
+                    if (tracingOn) {
+                        printResponseInfo(nextResponse);
+                    }
+                    iterateLookup(nextResponse);
+                } else if (ansCompatible.serverType.equals(queryType)) {
+                    // if this is an authority record
                     // if this is what we're looking for then done!
                     if (!ansCompatible.serverName.equals(lookForIPofCN)) {
-
                         for (int i = 0; i < currResponse.getAnswerCount(); i++) {
-                            System.out.println(fqdn + " " + answerServers.get(i).timeTL + "   " + answerServers.get(i).serverType + " " + answerServers.get(i).serverNameServer);
+                            if (answerServers.get(i).serverType == queryType){
+                                System.out.println(fqdn + " " + answerServers.get(i).timeTL + "   " + answerServers.get(i).serverType + " " + answerServers.get(i).serverNameServer);
+                            }
                             i++;
                         }
                         // you're done if you reach here
                     } else {
                         // if we find the IP address of the CN we were looking for iterate again
                         // done looking for NS
-                        System.out.println("HELLO");
                         if (IPV6Query) { nsSwitch = true;}
 
                         nextResponse = sendAndReceivePacket(ansIP, fqdn, IPV6Query);
-                        validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
+                        validFlagsCheck(nextResponse.getFlags(), fqdn, nextResponse);
                         if (tracingOn) {
                             printResponseInfo(nextResponse);
                         }
                         iterateLookup(nextResponse);
                     }
-                } else if (ansCompatible.serverName.equals(currRespDomainName) && ansCompatible.serverType.equals("CN")){
-                    // if get a CN answer search for the CN domain with root IP
-
-                    nextResponse = sendAndReceivePacket(rootNameServer, ansCompatible.serverNameServer, IPV6Query);
-                    validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
-
-                    if (tracingOn) {
-                        printResponseInfo(nextResponse);
-                    }
-                    iterateLookup(nextResponse);
                 }
             } else {
                 // if answerCount = 0
@@ -189,7 +188,7 @@ public class DNSlookup {
                         nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName, IPV6Query);
                     }
 
-                    validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
+                    validFlagsCheck(nextResponse.getFlags(), fqdn, nextResponse);
                     if (tracingOn) {
                         printResponseInfo(nextResponse);
                     }
@@ -209,7 +208,7 @@ public class DNSlookup {
                         nextResponse = sendAndReceivePacket(rootNameServer, lookForIPofCN, IPV6Query);
                     }
 
-                    validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
+                    validFlagsCheck(nextResponse.getFlags(), fqdn, nextResponse);
                     if (tracingOn) {
                         printResponseInfo(nextResponse);
                     }
@@ -314,6 +313,7 @@ public class DNSlookup {
         for (int i=0;i < maxCount;i++){
             if (loopServers.get(i).serverType == queryType){
                 best = loopServers.get(i);
+                break;
             }
         }
         return best;
