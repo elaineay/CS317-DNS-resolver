@@ -212,8 +212,10 @@ public class DNSResponse {
                 int pointer = dataInput.readByte();
                 nameServer += handleCompression(data, pointer);
             }
-            // remove extra "." at the end
-            nameServer = nameServer.substring(0, nameServer.length() - 1);
+            // remove extra "." at the end, add safety for error on linux
+            if (nameServer.length()) {
+                nameServer = nameServer.substring(0, nameServer.length() - 1);
+            }  
         }
         DNSServer oServer = new DNSServer(authName, authType, authClass, authTTL, authRDLen, nameServer);
         return oServer;
