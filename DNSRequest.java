@@ -15,12 +15,13 @@ public class DNSRequest {
 
     private int ending = 0x00;
     private int typeA = 0x0001;
+    private int typeAAAA = 0x001c;
     private int classIN = 0x0001;
 
     private byte[] outputFrame;
 
 
-    public DNSRequest(String fqdn) throws IOException {
+    public DNSRequest(String fqdn, boolean isIPV6) throws IOException {
         ByteArrayOutputStream bAOutput = new ByteArrayOutputStream();
         DataOutputStream dOutput = new DataOutputStream(bAOutput);
 
@@ -49,7 +50,11 @@ public class DNSRequest {
         }
 
         dOutput.writeByte(ending); //signify end of DNS request
-        dOutput.writeShort(typeA); // record type A (host request)
+        if (isIPV6) {
+            dOutput.writeShort(typeAAAA);
+        } else {
+            dOutput.writeShort(typeA);
+        } // record type A (host request)
         dOutput.writeShort(classIN); // class IN
 
         outputFrame = bAOutput.toByteArray();

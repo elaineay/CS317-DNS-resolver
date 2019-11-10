@@ -159,8 +159,10 @@ public class DNSlookup {
                         while (!foundCorrectIP) {
                             if (additionalRecords.get(correctRecord).serverType != "A") {
                                 correctRecord++;
+                            } else {
+                                foundCorrectIP = true;
                             }
-                            foundCorrectIP = true;
+
                         }
                         additionalIP = InetAddress.getByName(additionalRecords.get(correctRecord).serverNameServer);
                         nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
@@ -189,7 +191,7 @@ public class DNSlookup {
 
     private static DNSResponse sendAndReceivePacket(InetAddress server, String domainName) throws IOException, SocketTimeoutException {
         DatagramSocket socket = new DatagramSocket();
-        DNSRequest request = new DNSRequest(domainName);
+        DNSRequest request = new DNSRequest(domainName,IPV6Query);
         DatagramPacket reqPacket = request.createSendable(request, server, port);
         int sendAttempt = 0;
         socket.send(reqPacket);
