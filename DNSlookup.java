@@ -178,6 +178,7 @@ public class DNSlookup {
                         }
                         iterateLookup(nextResponse);
                     }
+                    //hi
                 } else {
                     String authIPName = authoritativeServers.get(0).serverNameServer;
                     // when answer = 0 and additional = 0
