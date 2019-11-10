@@ -213,7 +213,7 @@ public class DNSResponse {
                 nameServer += handleCompression(data, pointer);
             }
             // remove extra "." at the end
-            nameServer = nameServer.substring(0, nameServer.length() - 1);g
+            nameServer = nameServer.substring(0, nameServer.length() - 1);
         }
         DNSServer oServer = new DNSServer(authName, authType, authClass, authTTL, authRDLen, nameServer);
         return oServer;
