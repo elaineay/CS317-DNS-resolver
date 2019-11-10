@@ -213,7 +213,7 @@ public class DNSResponse {
                 nameServer += handleCompression(data, pointer);
             }
             // remove extra "." at the end
-            // nameServer = nameServer.substring(0, nameServer.length() - 1);
+            nameServer = nameServer.substring(0, nameServer.length() - 1);
         }
         DNSServer oServer = new DNSServer(authName, authType, authClass, authTTL, authRDLen, nameServer);
         return oServer;
@@ -296,7 +296,6 @@ public class DNSResponse {
                 authType = "AAAA";
                 break;
             default:
-                System.out.println("Something is wrong.");
                 authType = "NULL";
         }
         return authType;
