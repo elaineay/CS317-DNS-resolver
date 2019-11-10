@@ -18,6 +18,7 @@ public class DNSlookup {
     static final int MIN_PERMITTED_ARGUMENT_COUNT = 2;
     static final int MAX_PERMITTED_ARGUMENT_COUNT = 3;
     static final int port = 53;
+    static int numLookUps = 1;
     static String authServer1Name;
     static boolean tracingOn = false;
     static boolean IPV6Query = false;
@@ -26,7 +27,6 @@ public class DNSlookup {
     static String fqdn;
     static String lookForIPofCN;
     static boolean nsSwitch = false;
-    static int numLookUps = 0;
 
     /**
      * @param args
@@ -67,7 +67,7 @@ public class DNSlookup {
     public static void lookup() throws IOException {
         DNSResponse response = sendAndReceivePacket(rootNameServer, fqdn, IPV6Query);
 
-        validFlagsCheck(response.getFlags(), fqdn, rootNameServer);
+        validFlagsCheck(response.getFlags(), fqdn, response);
         if (tracingOn) {
             printResponseInfo(response);
         }
@@ -125,10 +125,9 @@ public class DNSlookup {
     //TODO: put the trace thing in for each iteration
     public static void iterateLookup(DNSResponse currResponse){
         ArrayList<DNSServer> answerServers = currResponse.getAnswerServers();
-
         numLookUps++;
         if (numLookUps == 30) {
-            System.err.println(fqdn + " -3 A " + rootNameServer.getHostAddress());
+            System.err.println(fqdn + " -3 A 0.0.0.0");
             System.exit(-1);
         }
 
@@ -165,8 +164,10 @@ public class DNSlookup {
                     }
                 } else if (ansCompatible.serverName.equals(currRespDomainName) && ansCompatible.serverType.equals("CN")){
                     // if get a CN answer search for the CN domain with root IP
+
                     nextResponse = sendAndReceivePacket(rootNameServer, ansCompatible.serverNameServer, IPV6Query);
                     validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
+
                     if (tracingOn) {
                         printResponseInfo(nextResponse);
                     }
@@ -200,6 +201,7 @@ public class DNSlookup {
                     System.out.println(authCompatible);
                     String authIPName = authCompatible.serverNameServer;
                     lookForIPofCN = authIPName;
+
                     if (IPV6Query) {
                         nsSwitch = false;
                         nextResponse = sendAndReceivePacket(rootNameServer, lookForIPofCN, nsSwitch);
@@ -222,9 +224,11 @@ public class DNSlookup {
         DatagramSocket socket = new DatagramSocket();
 
         DNSRequest request = new DNSRequest(domainName, isIPV6Query);
+
         DatagramPacket reqPacket = request.createSendable(request, server, port);
         int sendAttempt = 0;
         socket.send(reqPacket);
+        
 
         // Get response from DNS server
         byte[] responseBytes = new byte[1024];
@@ -236,11 +240,15 @@ public class DNSlookup {
                 break;
             } catch (SocketTimeoutException e) {
                 sendAttempt++;
+                if (tracingOn) {
+                    System.out.println("\n");
+                    System.out.println("Query ID     " + (int)request.getTransactionID() + " " + domainName + "  " + request.getIPVType() + " --> " + server.getHostAddress());
+                }
                 if (sendAttempt < 2) {
                     socket.send(reqPacket);
                     continue;
                 } else {
-                    System.err.println(domainName + " -2 A " + server.getHostAddress());
+                    System.err.println(domainName + " -2 A 0.0.0.0");
                     System.exit(-1);
                 }
             }
@@ -256,11 +264,14 @@ public class DNSlookup {
         // System.out.println("\n");
         // System.out.println("We are using responsebyte: "  + responseBytes + " with length: " + respPacket.getLength());
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
+        if (tracingOn) {
+            System.out.println("\n");
+            System.out.println("Query ID     " + (int)response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + server.getHostAddress()); 
+        }
         return response;
     }
 
     private static void printResponseInfo(DNSResponse response) {
-        System.out.println("Query ID     " + (int)response.getQueryID() + " " + fqdn + "  " + response.getRecordType() + " --> " + rootNameServer.getHostAddress());
         System.out.println("Response ID: " + (int)response.getQueryID() + " Authoritative = " + (response.getAnswerCount() > 0));
 
         System.out.println("  Answers (" + response.getAnswerCount() + ")");
@@ -283,18 +294,17 @@ public class DNSlookup {
             DNSServer currentServer = additionalRecords.get(i);
             printTraceServerInfo(currentServer);
         }
-        System.out.println("\n");
     }
 
-    private static void validFlagsCheck(Short flags, String fqdn, InetAddress rootNameServer) {
+    private static void validFlagsCheck(Short flags, String fqdn, DNSResponse response) {
         switch (flags & 0x0F) {
             case 0:
                 break;
             case 3:
-                System.err.println(fqdn + " -1 A " + rootNameServer.getHostAddress());
+                System.err.println(fqdn + " -1 A 0.0.0.0");
                 System.exit(-1);
             default:
-                System.err.println(fqdn + " -4 A " + rootNameServer.getHostAddress());
+                System.err.println(fqdn + " -4 A 0.0.0.0");
                 System.exit(-1);
         }
     }

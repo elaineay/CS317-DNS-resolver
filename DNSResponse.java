@@ -108,7 +108,10 @@ public class DNSResponse {
 
             queryName += new String(record, "UTF-8") + ".";
         }
-        queryName = queryName.substring(0, queryName.length() - 1);
+        // Safety check for linux servers
+        if (queryName.length() > 0) {
+            queryName = queryName.substring(0, queryName.length() - 1);
+        }
         // System.out.println("Query Name: " + queryName);
 
         recordType = getTypeValue(dataInput.readShort());
@@ -160,8 +163,10 @@ public class DNSResponse {
             int pointer = Integer.decode("0x0" + authName.substring(1));
             int authNameLen = data[pointer];
             authName = handleCompression(data, pointer);
-            // Remove the extra "." at the end
-            authName = authName.substring(0, authName.length() - 1);
+            // Remove the extra "." at the end, add safety check for linux
+            if (authName.length() > 0) {
+                authName = authName.substring(0, authName.length() - 1);
+            }
         }
         // System.out.println("authName: " + authName);
         int authTypeVal = dataInput.readShort();
@@ -180,11 +185,14 @@ public class DNSResponse {
             for (int i = 0; i < authRDLen/2 - 1; i++) {
                 short ipv6Short = dataInput.readShort();
                 String ipv6address = String.format("%02X ", ipv6Short);
-                if (ipv6Short != 0) {
+                if (ipv6Short == 0) {
+                    nameServer += 0 + ":";
+                } else {
                     nameServer += ipv6address + ":";
                 }
             }
-            nameServer += ":" + String.format("%02X ", dataInput.readShort());
+            // We don't want a colon for the last one, remove leading 0s
+            nameServer += String.format("%02X ", dataInput.readShort()).replaceFirst("^0+(?!$)", "");
             // remove the whitespace
             nameServer = nameServer.replaceAll("\\s+","");
         } else if (usesIP & authType != "CN") {
@@ -192,8 +200,10 @@ public class DNSResponse {
                 int ipVal = dataInput.readByte() & 0xFF;
                 nameServer += ipVal + ".";
             }
-            // remove extra "." at the end
-            nameServer = nameServer.substring(0, nameServer.length() - 1);
+            // remove extra "." at the end, add safety for error on linux
+            if (nameServer.length() > 0) {
+                nameServer = nameServer.substring(0, nameServer.length() - 1);
+            }
         } else {
             int recLen = 0;
             while ((recLen = dataInput.readByte()) > 0) {
@@ -209,8 +219,10 @@ public class DNSResponse {
                 int pointer = dataInput.readByte();
                 nameServer += handleCompression(data, pointer);
             }
-            // remove extra "." at the end
-            nameServer = nameServer.substring(0, nameServer.length() - 1);
+            // remove extra "." at the end, add safety for error on linux
+            if (nameServer.length() > 0) {
+                nameServer = nameServer.substring(0, nameServer.length() - 1);
+            }  
         }
         DNSServer oServer = new DNSServer(authName, authType, authClass, authTTL, authRDLen, nameServer);
         return oServer;
@@ -293,7 +305,6 @@ public class DNSResponse {
                 authType = "AAAA";
                 break;
             default:
-                System.out.println("Something is wrong.");
                 authType = "NULL";
         }
         return authType;
