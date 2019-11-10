@@ -73,8 +73,6 @@ public class DNSlookup {
         }
         ArrayList<DNSServer> answerServers = response.getAnswerServers();
 
-//        System.out.println("answer server class " + answerServers.get(0).serverClass);
-//        System.out.println("answer server type " + answerServers.get(0).serverType);
 
         // if this is the answer return, else iterate until answer found
         if (response.getAnswerCount() > 0) {
@@ -136,18 +134,13 @@ public class DNSlookup {
             DNSResponse nextResponse;
             String currRespDomainName = currResponse.getQueryName();
             if (currResponse.getAnswerCount() > 0) {
-                System.out.println(nsSwitch);
                 DNSServer ansCompatible = getCompatible(currResponse.getAnswerCount(), currResponse.getAnswerServers(), nsSwitch);
-                System.out.println(ansCompatible);
                 InetAddress ansIP = InetAddress.getByName(ansCompatible.serverNameServer);
-                System.out.println(ansCompatible.serverNameServer);
 
                 if (answerServers.get(0).serverType.equals("CN")){
                     nsSwitch = false;
-                    System.out.println("hello");
                     // if get a CN answer search for the CN domain with root IP
                     nextResponse = sendAndReceivePacket(rootNameServer, answerServers.get(0).serverNameServer, IPV6Query);
-                    System.out.println("made it");
                     validFlagsCheck(nextResponse.getFlags(), fqdn, nextResponse);
                     if (tracingOn) {
                         printResponseInfo(nextResponse);
@@ -169,8 +162,6 @@ public class DNSlookup {
                     if (IPV6Query) {
                         nsSwitch = true;
                     }
-                    System.out.println(nsSwitch);
-                    System.out.println("reached");
                     nextResponse = sendAndReceivePacket(ansIP, fqdn, IPV6Query);
                     validFlagsCheck(nextResponse.getFlags(), fqdn, nextResponse);
                     if (tracingOn) {
@@ -181,9 +172,7 @@ public class DNSlookup {
             } else {
                 // if answerCount = 0
                 if (currResponse.getAdditionalCount() > 0) {
-                    System.out.println("HELP");
                     DNSServer addCompatible = getCompatible(currResponse.getAdditionalCount(), currResponse.getAdditionalRecords(),nsSwitch);
-                    System.out.println("addCompatible: " + addCompatible);
 
 
                     if (IPV6Query) {
