@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.util.*;
 /**
  *
@@ -82,7 +83,6 @@ public class DNSlookup {
             }
         } else {
             // if not answer look it up iteratively
-            System.out.println("Iterator is called");
             iterateLookup(response);
         }
     }
@@ -122,7 +122,6 @@ public class DNSlookup {
             // keep iterating when you don't have an answer
             DNSResponse nextResponse;
             String currRespDomainName = currResponse.getQueryName();
-            System.out.println("NAME WE ARE QUERYING: " +currRespDomainName);
             if (currResponse.getAnswerCount() > 0) {
                 InetAddress ansIP = InetAddress.getByName(answerServers.get(0).serverNameServer);
                 // if this is an authority record
@@ -130,7 +129,6 @@ public class DNSlookup {
                     // if this is what we're looking for then done!
                     if (!answerServers.get(0).serverName.equals(lookForIPofCN)) {
                         // TODO: IPV6 version
-                        System.out.println("YA DONE");
                         System.out.println(fqdn + " " + answerServers.get(0).timeTL + "   " + answerServers.get(0).serverType + " " + answerServers.get(0).serverNameServer);
                         // you're done if you reach here
                     } else {
@@ -166,8 +164,7 @@ public class DNSlookup {
                         }
                         additionalIP = InetAddress.getByName(additionalRecords.get(correctRecord).serverNameServer);
                         nextResponse = sendAndReceivePacket(additionalIP, currRespDomainName);
-                        System.out.println("NextReponse flags:" + String.format("%x", nextResponse.getFlags()));
-                        // validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
+                        validFlagsCheck(nextResponse.getFlags(), fqdn, rootNameServer);
                         if (tracingOn) {
                             printResponseInfo(nextResponse);
                         }
@@ -190,17 +187,33 @@ public class DNSlookup {
 
     }
 
-    private static DNSResponse sendAndReceivePacket(InetAddress server, String domainName) throws IOException{
+    private static DNSResponse sendAndReceivePacket(InetAddress server, String domainName) throws IOException, SocketTimeoutException {
         DatagramSocket socket = new DatagramSocket();
         DNSRequest request = new DNSRequest(domainName);
         DatagramPacket reqPacket = request.createSendable(request, server, port);
+        int sendAttempt = 0;
         socket.send(reqPacket);
 
         // Get response from DNS server
         byte[] responseBytes = new byte[1024];
         DatagramPacket respPacket = new DatagramPacket(responseBytes, responseBytes.length);
-
-        socket.receive(respPacket);
+        socket.setSoTimeout(5000);
+        while (true) {
+            try {
+                socket.receive(respPacket);
+                break;
+            } catch (SocketTimeoutException e) {
+                sendAttempt++;
+                if (sendAttempt < 2) {
+                    socket.send(reqPacket);
+                    continue;
+                } else {
+                    System.err.println(domainName + " -2 A " + server.getHostAddress());
+                    System.exit(-1);
+                }
+            }
+        }
+        // socket.receive(respPacket);
 
         //TODO: checking if received
         // System.out.println("\n\nReceived: " + respPacket.getLength() + " bytes");
@@ -211,7 +224,6 @@ public class DNSlookup {
         // System.out.println("\n");
         // System.out.println("We are using responsebyte: "  + responseBytes + " with length: " + respPacket.getLength());
         DNSResponse response = new DNSResponse(responseBytes, respPacket.getLength());
-        System.out.println("Answer count " + response.getAnswerCount());
         return response;
     }
 
@@ -247,10 +259,10 @@ public class DNSlookup {
             case 0:
                 break;
             case 3:
-                System.err.println(fqdn + " -3 A " + rootNameServer.getHostAddress());
+                System.err.println(fqdn + " -1 A " + rootNameServer.getHostAddress());
                 System.exit(-1);
             default:
-                System.err.println(fqdn + " -2 A " + rootNameServer.getHostAddress());
+                System.err.println(fqdn + " -4 A " + rootNameServer.getHostAddress());
                 System.exit(-1);
         }
     }
