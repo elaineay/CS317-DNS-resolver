@@ -1,1 +1,18 @@
-Replace with the proper scheme
+Total before late penalty: [43/62]
+You can check file commandline_outputs.txt for the full output from the autoexpect tests.
+You can also refer to rubric at Canvas for more details.
+Automatically graded points: 29 / 48
+
+Criteria || Pts || Comments tracing || 12 / 13 || These are NOT handled correctly: Prints TTLs correctly, -1 pts, 
+error handling || 4 / 8 || These are NOT handled correctly: too many queries error handling, -2 pts, Other errors are handled, -2 pts, 
+functionality || 13 / 27 || These are NOT handled correctly: A query that returns a name server to use where the server`s address is not provided, -3 pts, A basic query that results in a CNAME and requires restart, -5 pts, Can print multiple IP addresses, -2 pts, TTL reported is the shortest TTL from the leading records, -2 pts, Handles IPV6 lookups, -2 pts, 
+
+
+Good luck with all the projects and finals <3
+
+This part is graded manually: 14 / 14
+
+Criteria || Pts || Commentsother || 5 / 5 || 
+documentation || 3 / 3 || 
+quality || 3 / 3 || 
+readability || 3 / 3 || 

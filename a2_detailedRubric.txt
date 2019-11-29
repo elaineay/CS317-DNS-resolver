@@ -1,0 +1,18 @@
+Total before late penalty: [3/62]
+You can check file commandline_outputs.txt for the full output from the autoexpect tests.
+You can also refer to rubric at Canvas for more details.
+Automatically graded points: 3 / 48
+
+Criteria || Pts || Comments tracing || 0 / 13 || Solid code.
+error handling || 0 / 8 || (fistbump)
+functionality || 3 / 27 || Is this love/?
+
+
+Good luck with all the projects and finals <3
+
+This part is graded manually: 0 / 14
+
+Criteria || Pts || Commentsother || 0 / 5 || 
+documentation || 0 / 3 || 
+quality || 0 / 3 || 
+readability || 0 / 3 || 

@@ -1,0 +1,65 @@
+spawn java -jar DNSlookup.jar 199.7.83.42 cluster90-elbwpeel-1jjv8xqi5kd5g-1169217295.us-east-1.elb.amazonaws.com
+spawn java -jar DNSlookup.jar 198.162.35.1 www.cs.ubc.ca
+www.cs.ubc.ca 3600   A 142.103.6.5
+spawn java -jar DNSlookup.jar 199.7.83.42 www.cs.ubc.ca
+www.cs.ubc.ca 1623   A 142.103.6.5
+spawn java -jar DNSlookup.jar 199.7.83.42 prep.ai.mit.edu
+spawn java -jar DNSlookup.jar 216.239.32.10 finance.google.ca
+finance.google.ca 300   A 172.217.14.206
+spawn java -jar DNSlookup.jar 199.7.83.42 amazon.ca
+spawn java -jar DNSlookup.jar 199.7.83.42 www.freebsd.org -6
+www.freebsd.org -3 A 0.0.0.0
+spawn java -jar DNSlookup.jar 23.58.143.10 www.shaw.ca
+www.shaw.ca -2 A 0.0.0.0
+spawn java -jar DNSlookup.jar 199.7.83.42 www.louvre.com
+spawn java -jar DNSlookup.jar 198.162.35.1 wee.cs.ubc.ca
+wee.cs.ubc.ca -1 A 0.0.0.0
+spawn java -jar DNSlookup.jar 198.162.35.1 ca
+spawn java -jar DNSlookup.jar 199.7.83.42 www.cs.ubc.ca -t
+
+
+Query ID     86 www.cs.ubc.ca  A --> 199.7.83.42
+Response ID: 86 Authoritative = false
+  Answers (0)
+  Nameservers (4)
+       ca                             172800     NS   c.ca-servers.ca          
+       ca                             172800     NS   j.ca-servers.ca          
+       ca                             172800     NS   x.ca-servers.ca          
+       ca                             172800     NS   any.ca-servers.ca        
+  Additional Information (8)
+       c.ca-servers.ca                172800     A    185.159.196.2            
+       j.ca-servers.ca                172800     A    198.182.167.1            
+       x.ca-servers.ca                172800     A    199.253.250.68           
+       any.ca-servers.ca              172800     A    199.4.144.2              
+       c.ca-servers.ca                172800     AAAA 2620:10A:8053:0:0:0:0:2  
+       j.ca-servers.ca                172800     AAAA 2001:500:83:0:0:0:0:1    
+       x.ca-servers.ca                172800     AAAA 2620:10A:80BA:0:0:0:0:68 
+       any.ca-servers.ca              172800     AAAA 2001:500:A7:0:0:0:0:2    
+
+
+Query ID     11 www.cs.ubc.ca  A --> 185.159.196.2
+Response ID: 11 Authoritative = false
+  Answers (0)
+  Nameservers (3)
+       ubc.ca                         86400      NS   hub.ubc.ca               
+       ubc.ca                         86400      NS   dns3.ubc.ca              
+       ubc.ca                         86400      NS   nightbird.eis.utoronto.ca
+  Additional Information (3)
+       hub.ubc.ca                     86400      A    137.82.1.1               
+       dns3.ubc.ca                    86400      A    142.103.1.1              
+       nightbird.eis.utoronto.ca      86400      A    128.100.72.90            
+
+
+Query ID     66 www.cs.ubc.ca  A --> 137.82.1.1
+Response ID: 66 Authoritative = true
+  Answers (1)
+       www.cs.ubc.ca                  1607       A    142.103.6.5              
+  Nameservers (3)
+       cs.ubc.ca                      959        NS   fs1.ugrad.cs.ubc.ca      
+       cs.ubc.ca                      959        NS   temp120.cs.ubc.ca        
+       cs.ubc.ca                      959        NS   ns1.cs.ubc.ca            
+  Additional Information (3)
+       temp120.cs.ubc.ca              1949       A    137.82.61.120            
+       fs1.ugrad.cs.ubc.ca            35         A    198.162.35.1             
+       ns1.cs.ubc.ca                  1949       A    142.103.6.6              
+www.cs.ubc.ca 1607   A 142.103.6.5
